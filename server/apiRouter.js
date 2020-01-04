@@ -11,8 +11,8 @@ mongoose.connect(`mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/
    password: process.env.MONGO_PASSWORD,
 });
 
-const log = debug('mjlbe:apiRouter');
-const logError = debug('mjlbe:apiRouter:error');
+const log = debug('bpbe:apiRouter');
+const logError = debug('bpbe:apiRouter:error');
 
 function logStack(err) {
   logError(err);

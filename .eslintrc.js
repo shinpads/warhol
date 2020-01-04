@@ -15,5 +15,7 @@ module.exports = {
     ecmaVersion: 2018,
   },
   rules: {
+    'new-cap': 'off',
+    'no-underscore-dangle': 'off',
   },
 };

@@ -1,7 +1,3 @@
-const debug = require('debug');
-const log = debug('mjlbe:Game');
-const logError = debug('mjlbe:Game:error');
-
 const mongoose = require('mongoose');
 
 const schema = {
@@ -16,7 +12,7 @@ const schema = {
   imageId: String,
   updates: Array,
   version: String,
-  forceUpdate: Boolean
+  forceUpdate: Boolean,
 };
 
 const compiledSchema = new mongoose.Schema(schema, { collection: 'games', autoIndex: true, strict: false });

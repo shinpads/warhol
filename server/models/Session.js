@@ -1,7 +1,3 @@
-const debug = require('debug');
-const log = debug('mjlbe:Session');
-const logError = debug('mjlbe:Session:error');
-
 const mongoose = require('mongoose');
 
 const schema = {

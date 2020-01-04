@@ -65,3 +65,4 @@ package-lock.json
 credentials.json
 token.json
 .env.*
+!.env.example
