@@ -30,7 +30,9 @@
     "mongoose": "^5.4.9"
   },
   "devDependencies": {
-    "eslint": "^6.8.0",
+    "eslint": "6.0.1",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.19.1",
     "morgan": "^1.9.1"
   }
 }

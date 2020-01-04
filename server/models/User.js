@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 
 const schema = {
   _id: String,
-  email: { type: String, required: true},
+  email: { type: String, required: true },
   username: String,
   password: String,
   createdDate: Date,
@@ -14,9 +14,9 @@ const schema = {
   lastOnline: Date,
 };
 
-const compiledSchema = new mongoose.Schema(this.schema, { collection: 'users', autoIndex: true, strict: false });
+const compiledSchema = new mongoose.Schema(schema, { collection: 'users', autoIndex: true, strict: false });
 const User = {
-  model: mongoose.model('User', compiledSchema)
+  model: mongoose.model('User', compiledSchema),
 };
 
 

@@ -19,9 +19,9 @@ const schema = {
   forceUpdate: Boolean
 };
 
-const compiledSchema = new mongoose.Schema(this.schema, { collection: 'games', autoIndex: true, strict: false });
+const compiledSchema = new mongoose.Schema(schema, { collection: 'games', autoIndex: true, strict: false });
 const Game = {
-  model: mongoose.model('Game', compiledSchema)
+  model: mongoose.model('Game', compiledSchema),
 };
 
 

@@ -13,9 +13,9 @@ const schema = {
   gameId: mongoose.Schema.Types.ObjectId,
 };
 
-const compiledSchema = new mongoose.Schema(this.schema, { collection: 'updates', autoIndex: true, strict: false });
+const compiledSchema = new mongoose.Schema(schema, { collection: 'updates', autoIndex: true, strict: false });
 const Update = {
-  model: mongoose.model('Update', compiledSchema)
+  model: mongoose.model('Update', compiledSchema),
 };
 
 

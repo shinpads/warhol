@@ -11,9 +11,9 @@ const schema = {
   userId: mongoose.Schema.Types.ObjectId,
 };
 
-const compiledSchema = new mongoose.Schema(this.schema, { collection: 'sessions', autoIndex: true, strict: false });
+const compiledSchema = new mongoose.Schema(schema, { collection: 'sessions', autoIndex: true, strict: false });
 const Session = {
-  model: mongoose.model('Session', compiledSchema)
+  model: mongoose.model('Session', compiledSchema),
 };
 
 
