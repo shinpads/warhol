@@ -2,17 +2,8 @@ const mongoose = require('mongoose');
 
 const schema = {
   _id: String,
-  title: String,
-  description: String,
-  fullDescription: String,
-  lastUpdated: Date,
-  downloads: Number,
-  hoursPlayed: Number,
-  fileId: String,
-  imageId: String,
-  updates: Array,
-  version: String,
-  forceUpdate: Boolean,
+  players: Number,
+  state: { type: String, enum: ['PRE_START', 'IN_PROGRESS', 'COMPLETE'] },
 };
 
 const compiledSchema = new mongoose.Schema(schema, { collection: 'games', autoIndex: true, strict: false });

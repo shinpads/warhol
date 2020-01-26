@@ -17,5 +17,6 @@ module.exports = {
   rules: {
     'new-cap': 'off',
     'no-underscore-dangle': 'off',
+    'no-use-before-define': 'off',
   },
 };

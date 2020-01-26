@@ -27,7 +27,8 @@
     "express": "^4.16.4",
     "express-session": "^1.15.6",
     "googleapis": "^27.0.0",
-    "mongoose": "^5.4.9"
+    "mongoose": "^5.4.9",
+    "socket.io": "^2.3.0"
   },
   "devDependencies": {
     "eslint": "6.0.1",
