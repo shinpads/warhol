@@ -15,8 +15,9 @@ module.exports = {
     ecmaVersion: 2018,
   },
   rules: {
-    'new-cap': 'off',
-    'no-underscore-dangle': 'off',
+    'no-plusplus': 'off',
+    'arrow-parens': 'off',
     'no-use-before-define': 'off',
+    'consistent-return': 'off',
   },
 };
