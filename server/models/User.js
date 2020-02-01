@@ -1,12 +1,16 @@
 const mongoose = require('mongoose');
 
 const schema = {
-  _id: String,
-  email: { type: String, required: true },
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    auto: true,
+  },
+  registered: { type: Boolean, default: false },
+  email: String,
   username: String,
   password: String,
   createdDate: Date,
-  permissions: Object,
   lastOnline: Date,
 };
 
