@@ -6,6 +6,7 @@ const schema = {
     required: true,
     auto: true,
   },
+  hash: String,
   users: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], default: [] },
   state: { type: String, enum: ['PRE_START', 'IN_PROGRESS', 'COMPLETE'], default: 'PRE_START' },
 };
