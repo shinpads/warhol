@@ -1,8 +1,8 @@
 const socketio = require('socket.io');
 const debug = require('debug');
 
-const log = debug('bpbe:socket');
-// const logError = debug('bpbe:socket:error');
+const log = debug('warhol:socket');
+// const logError = debug('warhol:socket:error');
 
 
 function setup(http) {
