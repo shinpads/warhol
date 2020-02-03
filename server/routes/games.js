@@ -2,8 +2,8 @@ const express = require('express');
 const debug = require('debug');
 const db = require('../models');
 
-const log = debug('bpbe:games');
-const logError = debug('bpbe:games:error');
+const log = debug('warhol:games');
+const logError = debug('warhol:games:error');
 
 const gameRouter = express.Router();
 
