@@ -4,8 +4,8 @@ const express = require('express');
 
 const gameRouter = require('./routes/games');
 
-const log = debug('bpbe:apiRouter');
-const logError = debug('bpbe:apiRouter:error');
+const log = debug('warhol:apiRouter');
+const logError = debug('warhol:apiRouter:error');
 
 const apiRouter = express.Router();
 
