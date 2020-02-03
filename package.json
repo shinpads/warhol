@@ -1,10 +1,11 @@
 {
-  "name": "broken-picture-backend",
+  "name": "warhol",
   "version": "1.0.0",
-  "description": "backend for broken-picture",
+  "description": "backend for picken.io",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=production DEBUG=bpbe:* node index.js",
+    "start": "NODE_ENV=production DEBUG=warhol:* node index.js",
+    "start:dev": "NODE_ENV=development DEBUG=warhol:* node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "./node_modules/.bin/eslint ./server --fix"
   },
@@ -15,9 +16,9 @@
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/shinpads/broken-picture-backend/issues"
+    "url": "https://github.com/shinpads/warhol/issues"
   },
-  "homepage": "https://github.com/shinpads/broken-picture-backend#readme",
+  "homepage": "https://github.com/shinpads/warhol#readme",
   "dependencies": {
     "bcrypt": "^3.0.3",
     "body-parser": "^1.18.3",
