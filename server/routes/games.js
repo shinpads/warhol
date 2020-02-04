@@ -8,16 +8,20 @@ const logError = debug('warhol:games:error');
 const gameRouter = express.Router();
 
 
-gameRouter.get('/:_id', getGame);
+gameRouter.get('/:hash', getGame);
 gameRouter.post('/', createGame);
 
-// GET /api/games/:_id
+// GET /api/games/:hash
 async function getGame(req, res) {
-  const { _id } = req.params;
-  log(`GET /api/games/${_id}`);
+  const { hash } = req.params;
+  log(`GET /api/games/${hash}`);
   try {
-    const game = await db.Game.model.findOne({ _id });
-    res.status(200).send({ success: true, game });
+    const game = await db.Game.model.findOne({ hash });
+    if (game) {
+      res.status(200).send({ success: true, game });
+    } else {
+      res.status(400).send({ success: false });
+    }
   } catch (err) {
     res.status(500).send({ success: false });
   }

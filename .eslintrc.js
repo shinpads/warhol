@@ -21,5 +21,6 @@ module.exports = {
     'consistent-return': 'off',
     'new-cap': 'off',
     'no-underscore-dangle': 'off',
+    'no-await-in-loop': 'off',
   },
 };

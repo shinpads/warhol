@@ -5,8 +5,8 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 
-const log = debug('bpbe:apiRouter');
-// const logError = debug('bpbe:apiRouter:error');
+const log = debug('warhol:apiRouter');
+// const logError = debug('warhol:apiRouter:error');
 const bodyParser = require('body-parser');
 
 const apiRouter = require('./server/apiRouter');
@@ -52,7 +52,6 @@ app.use('/', async (req, res, next) => {
   const sesh = await db.Session.model.findOne({ sessionId });
   if (sesh) {
     // session already exists
-    log(`found existing user with session ${sesh.sessionId}`);
     const user = await db.User.model.findById(sesh.userId);
     req.userId = user._id;
   } else {
