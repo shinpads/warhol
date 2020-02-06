@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 
 const { generateHash } = require('../../util/helperFunctions');
 
+const { ObjectId } = mongoose.Schema.Types;
+
 const schema = {
   _id: {
     type: mongoose.Schema.Types.ObjectId,
@@ -9,9 +11,11 @@ const schema = {
     auto: true,
   },
   hash: { type: String, index: true },
-  users: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], default: [] },
+  users: { type: [{ type: ObjectId, ref: 'User' }], default: [] },
+  host: { type: ObjectId, ref: 'User' },
   state: { type: String, enum: ['PRE_START', 'IN_PROGRESS', 'COMPLETE'], default: 'PRE_START' },
-  capacity: Number,
+  round: Number,
+  capacity: { type: Number, default: 12 },
 };
 
 const compiledSchema = new mongoose.Schema(schema, { collection: 'games', autoIndex: true, strict: false });

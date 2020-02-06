@@ -12,6 +12,7 @@ const schema = {
   password: String,
   createdDate: Date,
   lastOnline: Date,
+  socketId: String,
 };
 
 const compiledSchema = new mongoose.Schema(schema, { collection: 'users', autoIndex: true, strict: false });
