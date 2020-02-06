@@ -8,7 +8,7 @@ const schema = {
   },
   sessionId: String,
   loggedIn: { type: Boolean, default: false },
-  user: mongoose.Schema.Types.ObjectId,
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 };
 
 const compiledSchema = new mongoose.Schema(schema,
