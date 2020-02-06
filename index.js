@@ -5,19 +5,19 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 
-const log = debug('warhol:apiRouter');
-// const logError = debug('warhol:apiRouter:error');
+const log = debug('warhol:index');
+// const logError = debug('warhol:index:error');
 const bodyParser = require('body-parser');
 
 const apiRouter = require('./server/apiRouter');
 const socket = require('./server/socket');
 const db = require('./server/models');
 
-mongoose.connect(`mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/db?authSource=admin`,
+mongoose.connect(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/db?authSource=admin`,
   {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
     auth: { audthdb: 'admin' },
-    user: process.env.MONGO_USER,
-    password: process.env.MONGO_PASSWORD,
   });
 
 
@@ -31,14 +31,6 @@ app.set('trust proxy', 1);
 const httpServer = http.createServer(app);
 
 socket(httpServer);
-
-
-mongoose.connect(`mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/db?authSource=admin`,
-  {
-    auth: { audthdb: 'admin' },
-    user: process.env.MONGO_USER,
-    password: process.env.MONGO_PASSWORD,
-  });
 
 
 app.use('/', async (req, res, next) => {
