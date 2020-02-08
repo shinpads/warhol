@@ -14,8 +14,9 @@ const schema = {
   users: { type: [{ type: ObjectId, ref: 'User' }], default: [] },
   host: { type: ObjectId, ref: 'User' },
   state: { type: String, enum: ['PRE_START', 'IN_PROGRESS', 'COMPLETE'], default: 'PRE_START' },
-  round: Number,
+  round: { type: Number, default: 0 },
   capacity: { type: Number, default: 12 }, // probably wont even need capacity so just in case
+  gameChains: [{ type: ObjectId, ref: 'GameChain' }],
 };
 
 const compiledSchema = new mongoose.Schema(schema, { collection: 'games', autoIndex: true, strict: false });
