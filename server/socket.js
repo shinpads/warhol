@@ -37,7 +37,23 @@ function setupSocket(http) {
         { new: true },
       )
         .select('users')
+        .select('host')
         .populate('users');
+      if (!game) throw new Error();
+
+      // get rid of any disconnected sockets if for some reasone the on disconnected didnt work
+      const oldLength = game.users.length;
+      game.users = game.users.filter(user => user.socketId
+        && io.sockets.sockets[user.socketId]
+        && io.sockets.sockets[user.socketId].connected);
+      if (oldLength !== game.users.length) {
+        await db.Game.model.findOneAndUpdate({ hash }, { users: game.users });
+      }
+
+      if (!game.host || game.users.findIndex(user => user._id === game.host) === -1) {
+        game.host = game.users[0]._id;
+        await db.Game.model.findOneAndUpdate({ hash }, { host: game.host });
+      }
 
       await io.in(hash).emit('update-game', game);
 
@@ -63,7 +79,15 @@ async function handleDisconnect(socket, hash, userId, io) {
     { new: true },
   )
     .select('users')
+    .select('host')
     .populate('users');
+  if (String(game.host) === String(userId)) {
+    game.host = null;
+    if (game.users && game.users.length) {
+      game.host = game.users[0]._id;
+    }
+    await db.Game.model.findOneAndUpdate({ hash }, { host: game.host });
+  }
   await io.in(hash).emit('update-game', game);
 }
 
