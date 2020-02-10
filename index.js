@@ -45,7 +45,7 @@ app.use('/', async (req, res, next) => {
   if (sesh) {
     // session already exists
     const user = await db.User.model.findById(sesh.user);
-    req.user = user._id;
+    req.user = user;
   } else {
     // create new session
     log(`Creating new user with session ${req.sessionId}`);
@@ -53,11 +53,11 @@ app.use('/', async (req, res, next) => {
     const newUser = new db.User.model();
     newUser.username = 'Player';
     await newUser.save();
-    req.user = newUser._id;
+    req.user = newUser;
 
     const newSesh = new db.Session.model();
     newSesh.sessionId = req.sessionId;
-    newSesh.user = newUser._id;
+    newSesh.user = newUser;
     await newSesh.save();
   }
 

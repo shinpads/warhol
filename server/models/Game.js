@@ -13,7 +13,7 @@ const schema = {
   hash: { type: String, index: true },
   users: { type: [{ type: ObjectId, ref: 'User' }], default: [] },
   host: { type: ObjectId, ref: 'User' },
-  state: { type: String, enum: ['PRE_START', 'IN_PROGRESS', 'COMPLETE'], default: 'PRE_START' },
+  state: { type: String, enum: ['PRE_START', 'WORD_CHOICE', 'IN_PROGRESS', 'COMPLETE'], default: 'PRE_START' },
   round: { type: Number, default: 0 },
   capacity: { type: Number, default: 12 }, // probably wont even need capacity so just in case
   gameChains: [{ type: ObjectId, ref: 'GameChain' }],

@@ -2,14 +2,16 @@ require('dotenv').config({ path: `../.env.${process.env.NODE_ENV}` });
 const debug = require('debug');
 const express = require('express');
 
-const gameRouter = require('./routes/games');
+const gamesRouter = require('./routes/games');
+const usersRouter = require('./routes/users');
 
 const log = debug('warhol:apiRouter');
 const logError = debug('warhol:apiRouter:error');
 
 const apiRouter = express.Router();
 
-apiRouter.use('/games', gameRouter);
+apiRouter.use('/games', gamesRouter);
+apiRouter.use('/users', usersRouter);
 
 apiRouter.get('/test', tester);
 
