@@ -1,5 +1,6 @@
 const socketio = require('socket.io');
 const debug = require('debug');
+const { asyncForEach } = require('../util/helperFunctions');
 
 const db = require('./models');
 
@@ -60,6 +61,9 @@ function setupSocket(http) {
       socket.on('disconnect', async () => {
         handleDisconnect(socket, hash, session.user._id, io);
       });
+      socket.on('start-game', async () => {
+        startGame(socket, hash, session.user._id, io);
+      });
     } catch (err) {
       logError(err);
       socket.close();
@@ -89,6 +93,38 @@ async function handleDisconnect(socket, hash, userId, io) {
     await db.Game.model.findOneAndUpdate({ hash }, { host: game.host });
   }
   await io.in(hash).emit('update-game', game);
+}
+
+async function startGame(socket, hash, userId, io) {
+  try {
+    const game = await db.Game.model.findOne({ hash }).populate('users');
+    if (String(game.host) !== String(userId)) return;
+    if (game.state !== 'PRE_START') return;
+
+
+    // create gamechains
+    const gameChains = [];
+    await asyncForEach(game.users, async (user) => {
+      const gameChain = new db.GameChain.model();
+      gameChain.wordOptions = ['word1', 'word2', 'word3']; // TODO: generate random words
+      gameChain.user = user._id;
+      gameChain.game = game._id;
+      await gameChain.save();
+      gameChains.push(gameChain._id);
+      await io.to(user.socketId).emit('update-game', {
+        state: 'WORD_CHOICE',
+        gameChains: [gameChain],
+      });
+    });
+
+    game.state = 'WORD_CHOICE';
+    game.gameChains = gameChains;
+
+    await game.save();
+  } catch (err) {
+    logError(err);
+    socket.emit('error', 'error starting game');
+  }
 }
 
 module.exports = setupSocket;
