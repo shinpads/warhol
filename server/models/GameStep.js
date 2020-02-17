@@ -13,7 +13,7 @@ const schema = {
   user: { type: ObjectId, ref: 'User' },
   guess: String,
   drawing: String, // TODO: figure out how to store drawings
-
+  submitted: { type: Boolean, default: false },
 };
 
 const compiledSchema = new mongoose.Schema(schema, {

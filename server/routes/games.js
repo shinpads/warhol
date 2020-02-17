@@ -16,7 +16,13 @@ async function getGame(req, res) {
   const { hash } = req.params;
   log(`GET /api/games/${hash}`);
   try {
-    const game = await db.Game.model.findOne({ hash });
+    const game = await db.Game.model.findOne({ hash })
+      .populate({
+        path: 'gameChains',
+        populate: {
+          path: 'gameSteps',
+        },
+      });
     if (game) {
       res.status(200).send({ success: true, game });
     } else {

@@ -64,6 +64,9 @@ function setupSocket(http) {
       socket.on('start-game', async () => {
         startGame(socket, hash, session.user._id, io);
       });
+      socket.on('submit-step', async (step) => {
+        submitStep(socket, hash, session.user._id, io, step);
+      });
     } catch (err) {
       logError(err);
       socket.close();
@@ -102,12 +105,15 @@ async function startGame(socket, hash, userId, io) {
     if (String(game.host) !== String(userId)) return;
     if (game.state !== 'PRE_START') return;
 
+    game.state = 'IN_PROGRESS';
+    game.round = 1;
+    game.rounds = game.users.length;
 
     // create gamechains
     const gameChains = [];
     await asyncForEach(game.users, async (user) => {
       const gameStep = new db.GameStep.model();
-      gameStep.type = 'GUESS';
+      gameStep.type = 'DRAWING';
       gameStep.user = user._id;
       await gameStep.save();
       const gameChain = new db.GameChain.model();
@@ -118,19 +124,78 @@ async function startGame(socket, hash, userId, io) {
       gameChain.gameSteps = [gameStep._id];
       await gameChain.save();
       gameChains.push(gameChain._id);
+      gameChain.gameSteps = [gameStep]; // 'populate' gamestep
       await io.to(user.socketId).emit('update-game', {
-        state: 'IN_PROGRESS',
+        state: game.state,
+        rounds: game.rounds,
+        round: game.round,
         gameChains: [gameChain],
       });
     });
 
-    game.state = 'IN_PROGRESS';
     game.gameChains = gameChains;
 
     await game.save();
   } catch (err) {
     logError(err);
     socket.emit('error', 'error starting game');
+  }
+}
+
+async function submitStep(socket, hash, userId, io, step) {
+  try {
+    const gameStep = await db.GameStep.model.findOne({ _id: step._id });
+    if (String(gameStep.user) !== String(step.user)) return;
+    if (gameStep.type === 'DRAWING') {
+      gameStep.guess = step.guess; // TODO: gotta do drawing
+    } else if (gameStep.type === 'GUESS') {
+      gameStep.guess = step.guess;
+    }
+    gameStep.submitted = true;
+    await gameStep.save();
+    const game = await db.Game.model.findOne({ hash })
+      .populate({
+        path: 'gameChains',
+        populate: {
+          path: 'gameSteps',
+        },
+      })
+      .populate('users');
+
+    const allSubmitted = game.gameChains.map(gc => gc.gameSteps[gc.gameSteps.length - 1]
+      && gc.gameSteps[gc.gameSteps.length - 1].submitted).indexOf(false) === -1;
+
+
+    if (allSubmitted) {
+      game.round += 1;
+      const type = game.round % 2 === 1 ? 'DRAWING' : 'GUESS';
+      await asyncForEach(game.users, async (user) => {
+        for (let i = 0; i < game.gameChains.length; i++) {
+          if (game.gameChains[i].gameSteps.map(gs => gs.user).indexOf(user._id) === -1
+          && game.gameChains[i].gameSteps.length <= game.round) {
+            const newGameStep = new db.GameStep.model();
+            newGameStep.type = type;
+            newGameStep.user = user._id;
+            await newGameStep.save();
+            game.gameChains[i].gameSteps.push(newGameStep._id);
+            await game.gameChains[i].save();
+            const gameChain = game.gameChains[i];
+            gameChain.gameSteps = gameChain.gameSteps
+              .slice(gameChain.gameSteps.length - 2, gameChain.gameSteps.length);
+
+            io.to(user.socketId).emit('update-game', {
+              round: game.round,
+              gameChains: [gameChain],
+            });
+            break;
+          }
+        }
+      });
+      await game.save();
+    }
+  } catch (err) {
+    logError(err);
+    socket.emit('error', 'error submitting step');
   }
 }
 
