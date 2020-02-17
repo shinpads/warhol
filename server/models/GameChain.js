@@ -12,7 +12,7 @@ const schema = {
   originalWord: String,
   game: { type: ObjectId, ref: 'Game' },
   user: { type: ObjectId, ref: 'User' }, // the user who chose the word
-  steps: [{ type: ObjectId, ref: 'GameStep' }],
+  gameSteps: [{ type: ObjectId, ref: 'GameStep' }],
 };
 
 const compiledSchema = new mongoose.Schema(schema, { collection: 'gamechains', autoIndex: true, strict: false });

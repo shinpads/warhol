@@ -97,6 +97,7 @@ async function handleDisconnect(socket, hash, userId, io) {
 
 async function startGame(socket, hash, userId, io) {
   try {
+    log(userId, 'start-game');
     const game = await db.Game.model.findOne({ hash }).populate('users');
     if (String(game.host) !== String(userId)) return;
     if (game.state !== 'PRE_START') return;
@@ -105,19 +106,25 @@ async function startGame(socket, hash, userId, io) {
     // create gamechains
     const gameChains = [];
     await asyncForEach(game.users, async (user) => {
+      const gameStep = new db.GameStep.model();
+      gameStep.type = 'GUESS';
+      gameStep.user = user._id;
+      await gameStep.save();
       const gameChain = new db.GameChain.model();
-      gameChain.wordOptions = ['word1', 'word2', 'word3']; // TODO: generate random words
+      // gameChain.wordOptions = ['word1', 'word2', 'word3']; // TODO: generate random words
+      gameChain.originalWord = 'guitar';
       gameChain.user = user._id;
       gameChain.game = game._id;
+      gameChain.gameSteps = [gameStep._id];
       await gameChain.save();
       gameChains.push(gameChain._id);
       await io.to(user.socketId).emit('update-game', {
-        state: 'WORD_CHOICE',
+        state: 'IN_PROGRESS',
         gameChains: [gameChain],
       });
     });
 
-    game.state = 'WORD_CHOICE';
+    game.state = 'IN_PROGRESS';
     game.gameChains = gameChains;
 
     await game.save();

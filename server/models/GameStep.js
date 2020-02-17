@@ -16,7 +16,15 @@ const schema = {
 
 };
 
-const compiledSchema = new mongoose.Schema(schema, { collection: 'gamesteps', autoIndex: true, strict: false });
+const compiledSchema = new mongoose.Schema(schema, {
+  collection: 'gamesteps',
+  autoIndex: true,
+  strict: false,
+  timestamps: {
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  },
+});
 
 const GameStep = {
   model: mongoose.model('GameStep', compiledSchema),

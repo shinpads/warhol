@@ -19,7 +19,15 @@ const schema = {
   gameChains: [{ type: ObjectId, ref: 'GameChain' }],
 };
 
-const compiledSchema = new mongoose.Schema(schema, { collection: 'games', autoIndex: true, strict: false });
+const compiledSchema = new mongoose.Schema(schema, {
+  collection: 'games',
+  autoIndex: true,
+  strict: false,
+  timestamps: {
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  },
+});
 
 compiledSchema.pre('save', preSave);
 
