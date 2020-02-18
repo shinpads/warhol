@@ -41,6 +41,7 @@ function setupSocket(http) {
         .select('host')
         .populate('users');
       if (!game) throw new Error();
+      if (game.state === 'COMPLETE') return;
 
       // get rid of any disconnected sockets if for some reasone the on disconnected didnt work
       const oldLength = game.users.length;
@@ -88,6 +89,7 @@ async function handleDisconnect(socket, hash, userId, io) {
     .select('users')
     .select('host')
     .populate('users');
+  if (game.state === 'COMPLETE') return;
   if (String(game.host) === String(userId)) {
     game.host = null;
     if (game.users && game.users.length) {
@@ -144,6 +146,7 @@ async function startGame(socket, hash, userId, io) {
 
 async function submitStep(socket, hash, userId, io, step) {
   try {
+    log(userId, 'submit-step');
     const gameStep = await db.GameStep.model.findOne({ _id: step._id });
     if (String(gameStep.user) !== String(step.user)) return;
     if (gameStep.type === 'DRAWING') {
@@ -167,30 +170,39 @@ async function submitStep(socket, hash, userId, io, step) {
 
 
     if (allSubmitted) {
-      game.round += 1;
-      const type = game.round % 2 === 1 ? 'DRAWING' : 'GUESS';
-      await asyncForEach(game.users, async (user) => {
-        for (let i = 0; i < game.gameChains.length; i++) {
-          if (game.gameChains[i].gameSteps.map(gs => gs.user).indexOf(user._id) === -1
-          && game.gameChains[i].gameSteps.length <= game.round) {
-            const newGameStep = new db.GameStep.model();
-            newGameStep.type = type;
-            newGameStep.user = user._id;
-            await newGameStep.save();
-            game.gameChains[i].gameSteps.push(newGameStep._id);
-            await game.gameChains[i].save();
-            const gameChain = game.gameChains[i];
-            gameChain.gameSteps = gameChain.gameSteps
-              .slice(gameChain.gameSteps.length - 2, gameChain.gameSteps.length);
+      if (game.round > game.rounds) {
+        game.state = 'COMPLETE';
+        io.to(hash).emit('update-game', {
+          round: game.round,
+          state: game.state,
+          gameChains: game.gameChains,
+        });
+      } else {
+        game.round += 1;
+        const type = game.round % 2 === 1 ? 'DRAWING' : 'GUESS';
+        await asyncForEach(game.users, async (user) => {
+          for (let i = 0; i < game.gameChains.length; i++) {
+            if (game.gameChains[i].gameSteps.map(gs => gs.user).indexOf(user._id) === -1
+            && game.gameChains[i].gameSteps.length <= game.round) {
+              const newGameStep = new db.GameStep.model();
+              newGameStep.type = type;
+              newGameStep.user = user._id;
+              await newGameStep.save();
+              game.gameChains[i].gameSteps.push(newGameStep);
+              await game.gameChains[i].save();
+              const gameChain = game.gameChains[i];
+              gameChain.gameSteps = gameChain.gameSteps
+                .slice(gameChain.gameSteps.length - 2, gameChain.gameSteps.length);
 
-            io.to(user.socketId).emit('update-game', {
-              round: game.round,
-              gameChains: [gameChain],
-            });
-            break;
+              io.to(user.socketId).emit('update-game', {
+                round: game.round,
+                gameChains: [gameChain],
+              });
+              break;
+            }
           }
-        }
-      });
+        });
+      }
       await game.save();
     }
   } catch (err) {
