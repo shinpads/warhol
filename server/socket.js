@@ -170,7 +170,7 @@ async function submitStep(socket, hash, userId, io, step) {
 
 
     if (allSubmitted) {
-      if (game.round > game.rounds) {
+      if (game.round >= game.rounds) {
         game.state = 'COMPLETE';
         io.to(hash).emit('update-game', {
           round: game.round,
