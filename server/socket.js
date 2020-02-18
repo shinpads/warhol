@@ -182,8 +182,11 @@ async function submitStep(socket, hash, userId, io, step) {
         const type = game.round % 2 === 1 ? 'DRAWING' : 'GUESS';
         await asyncForEach(game.users, async (user) => {
           for (let i = 0; i < game.gameChains.length; i++) {
-            if (game.gameChains[i].gameSteps.map(gs => gs.user).indexOf(user._id) === -1
-            && game.gameChains[i].gameSteps.length <= game.round) {
+            if (game.gameChains[i].gameSteps
+              .map(gs => String(gs.user))
+              .indexOf(String(user._id)) === -1
+            && game.gameChains[i].gameSteps.length < game.round) {
+              log('adding to', user, game.gameChains[i], game.gameChains[i].gameSteps.map(gs => gs.user));
               const newGameStep = new db.GameStep.model();
               newGameStep.type = type;
               newGameStep.user = user._id;
