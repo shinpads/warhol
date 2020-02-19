@@ -39,6 +39,7 @@ function setupSocket(http) {
       )
         .select('users')
         .select('host')
+        .select('state')
         .populate('users');
       if (!game) throw new Error();
       if (game.state === 'COMPLETE') return;
@@ -88,6 +89,7 @@ async function handleDisconnect(socket, hash, userId, io) {
   )
     .select('users')
     .select('host')
+    .select('state')
     .populate('users');
   if (game.state === 'COMPLETE') return;
   if (String(game.host) === String(userId)) {
