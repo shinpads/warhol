@@ -75,7 +75,13 @@ function setupSocket(http) {
     }
   });
 }
-
+/**
+ * Called when socket disconnects
+ * @param {Socket} socket - the socket that disconnected
+ * @param {string} hash - the hash of the game which the socket disconnected from
+ * @param {ObjectId} userId - the user who disconnected from the game
+ * @param {io} io socketio
+ */
 async function handleDisconnect(socket, hash, userId, io) {
   log(userId, 'disconnected');
   const game = await db.Game.model.findOneAndUpdate(
@@ -102,6 +108,13 @@ async function handleDisconnect(socket, hash, userId, io) {
   await io.in(hash).emit('update-game', game);
 }
 
+/**
+ * Called when a socket emits 'start-game'
+ * @param {Socket} socket - the socket that emitted
+ * @param {string} hash - the hash of the game
+ * @param {ObjectId} userId - the user who owns the socket
+ * @param {io} io socketio
+ */
 async function startGame(socket, hash, userId, io) {
   try {
     log(userId, 'start-game');
@@ -146,6 +159,14 @@ async function startGame(socket, hash, userId, io) {
   }
 }
 
+/**
+ * Called when a socket emits 'submit-step'
+ * @param {Socket} socket - the socket that emitted
+ * @param {string} hash - the hash of the game
+ * @param {ObjectId} userId - the user who owns the socket
+ * @param {io} io socketio
+ * @param {Step} step - the Step object submitted
+ */
 async function submitStep(socket, hash, userId, io, step) {
   try {
     log(userId, 'submit-step');
