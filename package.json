@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/shinpads/warhol#readme",
   "dependencies": {
+    "@google-cloud/storage": "^4.3.1",
     "bcrypt": "^3.0.3",
     "body-parser": "^1.18.3",
     "cookie-parser": "^1.4.3",
