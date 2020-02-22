@@ -30,6 +30,7 @@
     "express": "^4.16.4",
     "express-session": "^1.17.0",
     "googleapis": "^27.0.0",
+    "into-stream": "^5.1.1",
     "mongoose": "^5.4.9",
     "socket.io": "^2.3.0"
   },

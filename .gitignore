@@ -66,4 +66,4 @@ credentials.json
 token.json
 .env.*
 !.env.example
-google-cloud-storage-key.json
+google-service-account.json

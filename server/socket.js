@@ -1,8 +1,9 @@
 const socketio = require('socket.io');
 const debug = require('debug');
-const { asyncForEach } = require('../util/helperFunctions');
 
+const { asyncForEach } = require('../util/helperFunctions');
 const db = require('./models');
+const drawingStore = require('./drawingStore');
 
 const log = debug('warhol:socket');
 const logError = debug('warhol:socket:error');
