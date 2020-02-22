@@ -51,7 +51,6 @@ app.use('/', async (req, res, next) => {
     log(`Creating new user with session ${req.sessionId}`);
 
     const newUser = new db.User.model();
-    newUser.username = 'Player';
     await newUser.save();
     req.user = newUser;
 
