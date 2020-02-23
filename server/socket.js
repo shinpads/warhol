@@ -1,9 +1,12 @@
 const socketio = require('socket.io');
 const debug = require('debug');
+const mongoose = require('mongoose');
 
 const { asyncForEach } = require('../util/helperFunctions');
 const db = require('./models');
-const drawingStore = require('./drawingStore');
+const { uploadDrawing } = require('./drawingStore');
+
+const { ObjectId } = mongoose.mongo;
 
 const log = debug('warhol:socket');
 const logError = debug('warhol:socket:error');
@@ -56,7 +59,10 @@ function setupSocket(http) {
 
       if (!game.host || game.users.findIndex(user => user._id === game.host) === -1) {
         game.host = game.users[0]._id;
-        await db.Game.model.findOneAndUpdate({ hash }, { host: game.host });
+        await db.Game.model.findOneAndUpdate({ hash }, { host: game.host })
+          .select('host')
+          .select('users')
+          .select('rounds');
       }
 
       await io.in(hash).emit('update-game', game);
@@ -104,7 +110,9 @@ async function handleDisconnect(socket, hash, userId, io) {
     if (game.users && game.users.length) {
       game.host = game.users[0]._id;
     }
-    await db.Game.model.findOneAndUpdate({ hash }, { host: game.host });
+    await db.Game.model.findOneAndUpdate({ hash }, { host: game.host })
+      .select('users')
+      .select('host');
   }
   await io.in(hash).emit('update-game', game);
 }
@@ -142,6 +150,7 @@ async function startGame(socket, hash, userId, io) {
       gameChain.gameSteps = [gameStep._id];
       await gameChain.save();
       gameChains.push(gameChain._id);
+      gameStep.user = user; // populate user
       gameChain.gameSteps = [gameStep]; // 'populate' gamestep
       await io.to(user.socketId).emit('update-game', {
         state: game.state,
@@ -172,9 +181,19 @@ async function submitStep(socket, hash, userId, io, step) {
   try {
     log(userId, 'submit-step');
     const gameStep = await db.GameStep.model.findOne({ _id: step._id });
-    if (String(gameStep.user) !== String(step.user)) return;
+    if (String(gameStep.user) !== String(step.user._id)) return;
     if (gameStep.type === 'DRAWING') {
-      gameStep.guess = step.guess; // TODO: gotta do drawing
+      const { drawData } = step;
+      const drawing = new db.Drawing.model();
+      drawing._id = new ObjectId();
+      drawing.user = userId;
+      drawing.gameHash = hash;
+      const fileName = `${hash}/${drawing._id}`;
+      drawing.cloudFileName = fileName;
+      // upload to google cloud
+      await uploadDrawing(drawData, fileName);
+      await drawing.save();
+      gameStep.drawing = drawing._id;
     } else if (gameStep.type === 'GUESS') {
       gameStep.guess = step.guess;
     }
@@ -185,13 +204,13 @@ async function submitStep(socket, hash, userId, io, step) {
         path: 'gameChains',
         populate: {
           path: 'gameSteps',
+          populate: { path: 'user' },
         },
       })
       .populate('users');
 
     const allSubmitted = game.gameChains.map(gc => gc.gameSteps[gc.gameSteps.length - 1]
       && gc.gameSteps[gc.gameSteps.length - 1].submitted).indexOf(false) === -1;
-
 
     if (allSubmitted) {
       if (game.round >= game.rounds) {
@@ -207,20 +226,19 @@ async function submitStep(socket, hash, userId, io, step) {
         await asyncForEach(game.users, async (user) => {
           for (let i = 0; i < game.gameChains.length; i++) {
             if (game.gameChains[i].gameSteps
-              .map(gs => String(gs.user))
+              .map(gs => String(gs.user._id))
               .indexOf(String(user._id)) === -1
             && game.gameChains[i].gameSteps.length < game.round) {
-              log('adding to', user, game.gameChains[i], game.gameChains[i].gameSteps.map(gs => gs.user));
+              log('adding to', user, game.gameChains[i], game.gameChains[i].gameSteps.map(gs => gs.user._id));
               const newGameStep = new db.GameStep.model();
               newGameStep.type = type;
-              newGameStep.user = user._id;
+              newGameStep.user = user;
               await newGameStep.save();
               game.gameChains[i].gameSteps.push(newGameStep);
               await game.gameChains[i].save();
               const gameChain = game.gameChains[i];
               gameChain.gameSteps = gameChain.gameSteps
                 .slice(gameChain.gameSteps.length - 2, gameChain.gameSteps.length);
-
               io.to(user.socketId).emit('update-game', {
                 round: game.round,
                 gameChains: [gameChain],

@@ -3,6 +3,7 @@ const Session = require('./Session');
 const User = require('./User');
 const GameChain = require('./GameChain');
 const GameStep = require('./GameStep');
+const Drawing = require('./Drawing');
 
 module.exports = {
   Game,
@@ -10,4 +11,5 @@ module.exports = {
   User,
   GameChain,
   GameStep,
+  Drawing,
 };

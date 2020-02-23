@@ -2,6 +2,9 @@ require('dotenv').config({ path: `../.env.${process.env.NODE_ENV}` });
 const debug = require('debug');
 const express = require('express');
 
+const db = require('./models');
+const { downloadDrawing } = require('./drawingStore');
+
 const gamesRouter = require('./routes/games');
 const usersRouter = require('./routes/users');
 
@@ -13,15 +16,21 @@ const apiRouter = express.Router();
 apiRouter.use('/games', gamesRouter);
 apiRouter.use('/users', usersRouter);
 
-apiRouter.get('/test', tester);
+apiRouter.get('/drawing/:_id', getDrawing);
 
-async function tester(req, res) {
-  log('GET /test');
+// GET /api/drawing/:_id
+async function getDrawing(req, res) {
+  const { _id } = req.params;
+  log(`/api/drawing/${_id}`);
   try {
-    res.send({ success: true });
+    const drawing = await db.Drawing.model.findOne({ _id });
+    if (!drawing || !drawing.cloudFileName) return res.status(400).send({ success: false });
+    const drawData = await downloadDrawing(drawing.cloudFileName);
+    if (!drawData) throw new Error('No draw data found');
+    res.send({ success: true, drawData });
   } catch (err) {
     logError(err);
-    res.status(400).send({ success: false });
+    res.status(500).send({ success: false });
   }
 }
 

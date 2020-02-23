@@ -12,7 +12,7 @@ const schema = {
   type: { type: String, enum: ['DRAWING', 'GUESS'] },
   user: { type: ObjectId, ref: 'User' },
   guess: String,
-  drawing: String, // TODO: figure out how to store drawings
+  drawing: { type: ObjectId, ref: 'Drawing' },
   submitted: { type: Boolean, default: false },
 };
 

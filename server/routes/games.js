@@ -21,6 +21,7 @@ async function getGame(req, res) {
         path: 'gameChains',
         populate: {
           path: 'gameSteps',
+          populate: { path: 'user' },
         },
       });
     if (game) {
