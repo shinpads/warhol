@@ -1,6 +1,7 @@
 const debug = require('debug');
 const intoStream = require('into-stream');
 const redis = require('redis');
+const { promisify } = require('util');
 
 
 const gc = require('../util/googleCloudStorage');
@@ -13,6 +14,9 @@ const redisClient = redis.createClient({
   port: process.env.REDIS_PORT,
   password: process.env.REDIS_PASSWORD || undefined,
 });
+
+const setInCache = promisify(redisClient.set).bind(redisClient);
+const getFromCache = promisify(redisClient.get).bind(redisClient);
 
 // put this in .env later, probably make a seperate bucket for testing
 const BUCKET_NAME = 'cosel-drawings';
@@ -30,12 +34,15 @@ async function uploadDrawing(drawData, fileName) {
   try {
     const cloudFile = bucket.file(fileName);
     const fileWriteStream = cloudFile.createWriteStream({ resumable: false });
-    redisClient.set(fileName, drawData);
-    await new Promise((resolve, reject) => intoStream(JSON.stringify(drawData))
+    const drawDataString = JSON.stringify(drawData);
+    await setInCache(fileName, drawDataString);
+    if (process.env.NODE_ENV === 'development') return;
+    await new Promise((resolve, reject) => intoStream(drawDataString)
       .pipe(fileWriteStream)
       .on('error', reject)
       .on('finish', resolve));
   } catch (err) {
+    log(err);
     throw new Error('Failed to upload to cloud', err);
   }
 }
@@ -46,16 +53,18 @@ async function uploadDrawing(drawData, fileName) {
  * @return {Promise} resolves to drawing object
  */
 async function downloadDrawing(fileName) {
-  log('downloading drawing');
+  log('downloading drawing', fileName);
   try {
+    const drawingFromCache = await getFromCache(fileName);
+    if (drawingFromCache) return JSON.parse(drawingFromCache);
     const cloudFile = bucket.file(fileName);
     const fileReadStream = cloudFile.createReadStream()
       .on('error', () => {
         throw new Error('Could not create readable stream from file', fileName);
       });
     const drawing = await getObjectFromStream(fileReadStream);
-    // TODO: cache in Redis
-    return drawing;
+    await setInCache(fileName, drawing);
+    return JSON.parse(drawing);
   } catch (err) {
     throw new Error('Failed to download file from cloud', err);
   }

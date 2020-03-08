@@ -34,7 +34,8 @@ async function postUser(req, res) {
   const { _id } = req.params;
   log(`POST /api/users/${_id}`);
   try {
-    if (_id !== String(req.user._id)) return res.status(400).send({ success: false });
+    log(String(_id), String(req.user._id), String(_id) === String(req.user._id));
+    if (String(_id) !== String(req.user._id)) return res.status(400).send({ success: false });
     const user = await db.User.model.findOneAndUpdate(
       { _id },
       { ...req.body },
