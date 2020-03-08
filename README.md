@@ -2,6 +2,10 @@
 backend for cosel.io
 
 ## setup
+install and setup redis
+install and setup mongodb
+
+
 ```
 npm install
 ```
