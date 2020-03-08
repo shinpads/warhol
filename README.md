@@ -1,5 +1,5 @@
 # warhol
-backend for picken.io
+backend for cosel.io
 
 ## setup
 ```

@@ -1,7 +1,7 @@
 {
   "name": "warhol",
   "version": "1.0.0",
-  "description": "backend for picken.io",
+  "description": "backend for cosel.io",
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=production DEBUG=warhol:* node index.js",
@@ -32,6 +32,7 @@
     "googleapis": "^27.0.0",
     "into-stream": "^5.1.1",
     "mongoose": "^5.4.9",
+    "redis": "^3.0.2",
     "socket.io": "^2.3.0"
   },
   "devDependencies": {

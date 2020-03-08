@@ -1,13 +1,21 @@
 const debug = require('debug');
 const intoStream = require('into-stream');
+const redis = require('redis');
+
 
 const gc = require('../util/googleCloudStorage');
 const getObjectFromStream = require('../util/getObjectFromStream');
 
 const log = debug('warhol:drawingStore');
 
+const redisClient = redis.createClient({
+  host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
+  password: process.env.REDIS_PASSWORD || undefined,
+});
+
 // put this in .env later, probably make a seperate bucket for testing
-const BUCKET_NAME = 'picken-drawings';
+const BUCKET_NAME = 'cosel-drawings';
 
 const bucket = gc.bucket(BUCKET_NAME);
 
@@ -22,7 +30,7 @@ async function uploadDrawing(drawData, fileName) {
   try {
     const cloudFile = bucket.file(fileName);
     const fileWriteStream = cloudFile.createWriteStream({ resumable: false });
-    // TODO: cache in Redis
+    redisClient.set(fileName, drawData);
     await new Promise((resolve, reject) => intoStream(JSON.stringify(drawData))
       .pipe(fileWriteStream)
       .on('error', reject)
