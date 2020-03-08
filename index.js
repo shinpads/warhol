@@ -13,6 +13,8 @@ const apiRouter = require('./server/apiRouter');
 const socket = require('./server/socket');
 const db = require('./server/models');
 
+require('./checkEnvVariables')();
+
 mongoose.connect(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/db?authSource=admin`,
   {
     useNewUrlParser: true,
