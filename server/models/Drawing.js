@@ -17,8 +17,8 @@ const compiledSchema = new mongoose.Schema(schema,
     autoIndex: true,
     strict: false,
     timestamps: {
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
+      createdAt: 'createdAt',
+      updatedAt: 'updatedAt',
     },
   });
 const Drawing = {
