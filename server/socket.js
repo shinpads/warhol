@@ -20,7 +20,7 @@ function setupSocket(http) {
       if (!hash || !sessionId) {
         throw new Error();
       }
-
+      hash.toUpperCase();
       const session = await db.Session.model.findOne({ sessionId }).populate('user');
       if (!session || !session.user) {
         throw new Error();
@@ -224,28 +224,24 @@ async function submitStep(socket, hash, userId, io, step) {
         game.round += 1;
         const type = game.round % 2 === 1 ? 'DRAWING' : 'GUESS';
         await asyncForEach(game.users, async (user) => {
-          for (let i = 0; i < game.gameChains.length; i++) {
-            if (game.gameChains[i].gameSteps
-              .map(gs => String(gs.user._id))
-              .indexOf(String(user._id)) === -1
-            && game.gameChains[i].gameSteps.length < game.round) {
-              log('adding to', user, game.gameChains[i], game.gameChains[i].gameSteps.map(gs => gs.user._id));
-              const newGameStep = new db.GameStep.model();
-              newGameStep.type = type;
-              newGameStep.user = user;
-              await newGameStep.save();
-              game.gameChains[i].gameSteps.push(newGameStep);
-              await game.gameChains[i].save();
-              const gameChain = game.gameChains[i];
-              gameChain.gameSteps = gameChain.gameSteps
-                .slice(gameChain.gameSteps.length - 2, gameChain.gameSteps.length);
-              io.to(user.socketId).emit('update-game', {
-                round: game.round,
-                gameChains: [gameChain],
-              });
-              break;
-            }
-          }
+          const userChainIndex = (game.gameChains
+            .map(gs => String(gs.user._id))
+            .indexOf(String(user._id)) + game.round - 1) % game.gameChains.length;
+
+          log('adding to', user, game.gameChains[userChainIndex], game.gameChains[userChainIndex].gameSteps.map(gs => gs.user._id));
+          const newGameStep = new db.GameStep.model();
+          newGameStep.type = type;
+          newGameStep.user = user;
+          await newGameStep.save();
+          game.gameChains[userChainIndex].gameSteps.push(newGameStep);
+          await game.gameChains[userChainIndex].save();
+          const gameChain = game.gameChains[userChainIndex];
+          gameChain.gameSteps = gameChain.gameSteps
+            .slice(gameChain.gameSteps.length - 2, gameChain.gameSteps.length);
+          io.to(user.socketId).emit('update-game', {
+            round: game.round,
+            gameChains: [gameChain],
+          });
         });
       }
       await game.save();

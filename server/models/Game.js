@@ -10,7 +10,16 @@ const schema = {
     required: true,
     auto: true,
   },
-  hash: { type: String, index: true },
+  hash: {
+    type: String,
+    index: {
+      unique: true,
+      collation: {
+        locale: 'en',
+        strength: 2,
+      },
+    },
+  },
   users: { type: [{ type: ObjectId, ref: 'User' }], default: [] },
   host: { type: ObjectId, ref: 'User' },
   state: { type: String, enum: ['PRE_START', 'WORD_CHOICE', 'IN_PROGRESS', 'COMPLETE'], default: 'PRE_START' },
