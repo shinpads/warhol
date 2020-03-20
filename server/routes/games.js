@@ -2,6 +2,8 @@ const express = require('express');
 const debug = require('debug');
 const db = require('../models');
 
+const { getDrawingsForGame } = require('../lib/Drawings');
+
 const log = debug('warhol:games');
 const logError = debug('warhol:games:error');
 
@@ -25,7 +27,8 @@ async function getGame(req, res) {
         },
       });
     if (game) {
-      res.status(200).send({ success: true, game });
+      const drawingMap = await getDrawingsForGame(game.hash);
+      res.status(200).send({ success: true, game, drawingMap });
     } else {
       res.status(400).send({ success: false });
     }

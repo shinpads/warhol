@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 const { asyncForEach } = require('../util/helperFunctions');
 const db = require('./models');
 const { uploadDrawing } = require('./drawingStore');
+const { getDrawingsForGame } = require('./lib/Drawings');
+const { generateWords } = require('./lib/generateWords');
 
 const { ObjectId } = mongoose.mongo;
 
@@ -134,7 +136,8 @@ async function startGame(socket, hash, userId, io) {
     game.state = 'IN_PROGRESS';
     game.round = 1;
     game.rounds = game.users.length;
-
+    const words = generateWords(game.users.length);
+    let i = 0;
     // create gamechains
     const gameChains = [];
     await asyncForEach(game.users, async (user) => {
@@ -143,8 +146,8 @@ async function startGame(socket, hash, userId, io) {
       gameStep.user = user._id;
       await gameStep.save();
       const gameChain = new db.GameChain.model();
-      // gameChain.wordOptions = ['word1', 'word2', 'word3']; // TODO: generate random words
-      gameChain.originalWord = 'guitar';
+      gameChain.originalWord = words[i];
+      i += 1;
       gameChain.user = user._id;
       gameChain.game = game._id;
       gameChain.gameSteps = [gameStep._id];
@@ -215,6 +218,12 @@ async function submitStep(socket, hash, userId, io, step) {
     if (allSubmitted) {
       if (game.round >= game.rounds) {
         game.state = 'COMPLETE';
+        try {
+          const drawingMap = await getDrawingsForGame(game.hash);
+          io.to(hash).emit('drawing-map', drawingMap);
+        } catch (err) {
+          logError('Coudlnt get drawingMap');
+        }
         io.to(hash).emit('update-game', {
           round: game.round,
           state: game.state,

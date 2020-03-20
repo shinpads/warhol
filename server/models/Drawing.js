@@ -7,7 +7,7 @@ const schema = {
     auto: true,
   },
   cloudFileName: String,
-  gameHash: String,
+  gameHash: { type: String, index: 1 },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 };
 

@@ -27,8 +27,8 @@ const schema = {
   rounds: Number,
   capacity: { type: Number, default: 12 }, // probably wont even need capacity so just in case
   gameChains: [{ type: ObjectId, ref: 'GameChain' }],
-  guessTimeLimit: { type: Number, default: 15 },
-  drawTimeLimit: { type: Number, default: 60 },
+  guessTimeLimit: { type: Number, default: 15000 },
+  drawTimeLimit: { type: Number, default: 60000 },
 };
 
 const compiledSchema = new mongoose.Schema(schema, {

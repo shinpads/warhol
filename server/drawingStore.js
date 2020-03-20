@@ -4,8 +4,8 @@ const redis = require('redis');
 const { promisify } = require('util');
 
 
-const gc = require('../util/googleCloudStorage');
-const getObjectFromStream = require('../util/getObjectFromStream');
+const gc = require('./lib/googleCloudStorage');
+const getObjectFromStream = require('./lib/getObjectFromStream');
 
 const log = debug('warhol:drawingStore');
 
@@ -58,10 +58,8 @@ async function downloadDrawing(fileName) {
     const drawingFromCache = await getFromCache(fileName);
     if (drawingFromCache) return JSON.parse(drawingFromCache);
     const cloudFile = bucket.file(fileName);
-    const fileReadStream = cloudFile.createReadStream()
-      .on('error', () => {
-        throw new Error('Could not create readable stream from file', fileName);
-      });
+    const fileReadStream = cloudFile.createReadStream();
+    if (!fileReadStream) throw new Error('Could not create readable stream from file', fileName);
     const drawing = await getObjectFromStream(fileReadStream);
     await setInCache(fileName, drawing);
     return JSON.parse(drawing);
