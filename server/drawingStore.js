@@ -19,7 +19,7 @@ const setInCache = promisify(redisClient.set).bind(redisClient);
 const getFromCache = promisify(redisClient.get).bind(redisClient);
 
 // put this in .env later, probably make a seperate bucket for testing
-const BUCKET_NAME = 'cosel-drawings';
+const BUCKET_NAME = 'picken-drawings';
 
 const bucket = gc.bucket(BUCKET_NAME);
 
