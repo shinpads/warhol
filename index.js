@@ -15,12 +15,20 @@ const db = require('./server/models');
 
 require('./checkEnvVariables')();
 
-mongoose.connect(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/db?authSource=admin`,
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    auth: { audthdb: 'admin' },
-  });
+if (process.env.MONGO_USER && process.env.MONGO_PASSWORD) {
+  mongoose.connect(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/db?authSource=admin`,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      auth: { audthdb: 'admin' },
+    });
+} else {
+  mongoose.connect(`mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/db?authSource=admin`,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+}
 
 
 const app = express();
