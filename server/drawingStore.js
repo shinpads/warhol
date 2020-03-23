@@ -53,15 +53,19 @@ async function uploadDrawing(drawData, fileName) {
  * @return {Promise} resolves to drawing object
  */
 async function downloadDrawing(fileName) {
-  log('downloading drawing', fileName);
+  log('getting drawing', fileName);
   try {
     const drawingFromCache = await getFromCache(fileName);
-    if (drawingFromCache) return JSON.parse(drawingFromCache);
+    if (drawingFromCache) {
+      log('got from cache', fileName);
+      return JSON.parse(drawingFromCache);
+    }
     const cloudFile = bucket.file(fileName);
     const fileReadStream = cloudFile.createReadStream();
     if (!fileReadStream) throw new Error('Could not create readable stream from file', fileName);
     const drawing = await getObjectFromStream(fileReadStream);
     await setInCache(fileName, drawing);
+    log('got drawing from cloud store', fileName);
     return JSON.parse(drawing);
   } catch (err) {
     throw new Error('Failed to download file from cloud', err);
