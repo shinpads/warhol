@@ -3,6 +3,7 @@ const debug = require('debug');
 const db = require('../models');
 
 const { getDrawingsForGame } = require('../lib/Drawings');
+const { getFromCache } = require('../../util/redisClient');
 
 const log = debug('warhol:games');
 const logError = debug('warhol:games:error');
@@ -28,11 +29,19 @@ async function getGame(req, res) {
       });
     if (game) {
       const drawingMap = await getDrawingsForGame(game.hash);
-      res.status(200).send({ success: true, game, drawingMap });
+      log( await getFromCache(`game:${hash}:user-submitted-map`));
+      const userSubmittedMap = JSON.parse(await getFromCache(`game:${hash}:user-submitted-map`));
+      res.status(200).send({
+        success: true,
+        game,
+        drawingMap,
+        userSubmittedMap,
+      });
     } else {
       res.status(400).send({ success: false });
     }
   } catch (err) {
+    logError(err);
     res.status(500).send({ success: false });
   }
 }

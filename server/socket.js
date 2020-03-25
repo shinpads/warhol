@@ -7,6 +7,7 @@ const db = require('./models');
 const { uploadDrawing } = require('./drawingStore');
 const { getDrawingsForGame } = require('./lib/Drawings');
 const { generateWords } = require('./lib/generateWords');
+const { getFromCache, setInCache } = require('../util/redisClient');
 
 const { ObjectId } = mongoose.mongo;
 
@@ -202,6 +203,14 @@ async function submitStep(socket, hash, userId, io, step) {
     }
     gameStep.submitted = true;
     await gameStep.save();
+
+    const redisUserSubmittedMapKey = `game:${hash}:user-submitted-map`;
+    let userSubmittedMap = JSON.parse(await getFromCache(redisUserSubmittedMapKey));
+    if (!userSubmittedMap) userSubmittedMap = {};
+    userSubmittedMap[userId] = true;
+    await setInCache(redisUserSubmittedMapKey, JSON.stringify(userSubmittedMap));
+    await io.to(hash).emit('user-submitted-map', userSubmittedMap);
+
     const game = await db.Game.model.findOne({ hash })
       .populate({
         path: 'gameChains',
@@ -254,6 +263,9 @@ async function submitStep(socket, hash, userId, io, step) {
         });
       }
       await game.save();
+
+      await setInCache(redisUserSubmittedMapKey, '{}');
+      await io.to(hash).emit('user-submitted-map', {});
     }
   } catch (err) {
     logError(err);

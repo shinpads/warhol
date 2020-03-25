@@ -1,22 +1,12 @@
 const debug = require('debug');
 const intoStream = require('into-stream');
-const redis = require('redis');
-const { promisify } = require('util');
 
-
+const { getFromCache, setInCache } = require('../util/redisClient');
 const gc = require('./lib/googleCloudStorage');
 const getObjectFromStream = require('./lib/getObjectFromStream');
 
 const log = debug('warhol:drawingStore');
 
-const redisClient = redis.createClient({
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-  password: process.env.REDIS_PASSWORD || undefined,
-});
-
-const setInCache = promisify(redisClient.set).bind(redisClient);
-const getFromCache = promisify(redisClient.get).bind(redisClient);
 
 // put this in .env later, probably make a seperate bucket for testing
 const BUCKET_NAME = 'picken-drawings';
