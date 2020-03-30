@@ -1,6 +1,6 @@
 {
   "name": "warhol",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "backend for cosel.io",
   "main": "index.js",
   "scripts": {
