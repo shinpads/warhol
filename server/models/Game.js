@@ -29,6 +29,10 @@ const schema = {
   gameChains: [{ type: ObjectId, ref: 'GameChain' }],
   guessTimeLimit: { type: Number, default: 15000 },
   drawTimeLimit: { type: Number, default: 60000 },
+  startTime: Date,
+  endTime: Date,
+  thumbnail: Object,
+  nextGame: { type: ObjectId, ref: 'Game' },
 };
 
 const compiledSchema = new mongoose.Schema(schema, {

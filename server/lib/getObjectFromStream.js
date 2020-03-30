@@ -1,9 +1,14 @@
 async function getObjectFromStream(stream) {
   let dataString = '';
-  await new Promise((resolve) => {
-    stream.on('data', chunk => { dataString += chunk; });
-    stream.on('end', resolve);
-  });
+  try {
+    await new Promise((resolve) => {
+      stream.on('data', chunk => { dataString += chunk; });
+      stream.on('end', resolve);
+      stream.on('err', (err) => { throw new Error(err); });
+    });
+  } catch (err) {
+    throw new Error(err);
+  }
   try {
     const data = JSON.parse(dataString);
     return data;

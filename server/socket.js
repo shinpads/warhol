@@ -165,7 +165,7 @@ async function startGame(socket, hash, userId, io) {
     });
 
     game.gameChains = gameChains;
-
+    game.startTime = Date.now();
     await game.save();
   } catch (err) {
     logError(err);
@@ -227,6 +227,7 @@ async function submitStep(socket, hash, userId, io, step) {
     if (allSubmitted) {
       if (game.round >= game.rounds) {
         game.state = 'COMPLETE';
+        game.endTime = Date.now();
         try {
           const drawingMap = await getDrawingsForGame(game.hash);
           io.to(hash).emit('drawing-map', drawingMap);
