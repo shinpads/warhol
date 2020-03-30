@@ -79,6 +79,9 @@ function setupSocket(http) {
       socket.on('submit-step', async (step) => {
         submitStep(socket, hash, session.user._id, io, step);
       });
+      socket.on('ready', async (ready) => {
+        sendReady(socket, hash, session.user._id, io, ready);
+      });
     } catch (err) {
       logError(err);
       socket.close();
@@ -118,20 +121,22 @@ async function handleDisconnect(socket, hash, userId, io) {
       .select('host');
   }
   await io.in(hash).emit('update-game', game);
+  const redisUserReadyMapKey = `game:${hash}:user-ready-map`;
+  let userReadyMap = JSON.parse(await getFromCache(redisUserReadyMapKey));
+  if (!userReadyMap) userReadyMap = {};
+  userReadyMap[userId] = false;
+  await setInCache(redisUserReadyMapKey, JSON.stringify(userReadyMap));
 }
 
 /**
- * Called when a socket emits 'start-game'
- * @param {Socket} socket - the socket that emitted
+ * starts a game
  * @param {string} hash - the hash of the game
- * @param {ObjectId} userId - the user who owns the socket
  * @param {io} io socketio
  */
-async function startGame(socket, hash, userId, io) {
+async function startGame(hash, io) {
   try {
-    log(userId, 'start-game');
+    log('start-game', hash);
     const game = await db.Game.model.findOne({ hash }).populate('users');
-    if (String(game.host) !== String(userId)) return;
     if (game.state !== 'PRE_START') return;
 
     game.state = 'IN_PROGRESS';
@@ -169,7 +174,35 @@ async function startGame(socket, hash, userId, io) {
     await game.save();
   } catch (err) {
     logError(err);
-    socket.emit('error', 'error starting game');
+    throw new Error(err);
+  }
+}
+
+/**
+ * Called when a socket emits 'ready'
+ * @param {Socket} socket - the socket that emitted
+ * @param {string} hash - the hash of the game
+ * @param {ObjectId} userId - the user who owns the socket
+ * @param {io} io socketio
+ * @param {boolean} ready if user is ready or not
+ */
+async function sendReady(socket, hash, userId, io, ready) {
+  const redisUserReadyMapKey = `game:${hash}:user-ready-map`;
+  let userReadyMap = JSON.parse(await getFromCache(redisUserReadyMapKey));
+  if (!userReadyMap) userReadyMap = {};
+  userReadyMap[userId] = ready;
+  await setInCache(redisUserReadyMapKey, JSON.stringify(userReadyMap));
+  io.to(hash).emit('user-ready-map', userReadyMap);
+
+  const game = await db.Game.model.findOne({ hash });
+  let allReady = true;
+  game.users.forEach(user => {
+    if (!userReadyMap[user]) {
+      allReady = false;
+    }
+  });
+  if (allReady) {
+    startGame(hash, io);
   }
 }
 

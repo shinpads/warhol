@@ -33,11 +33,13 @@ async function getGame(req, res) {
     if (game) {
       const drawingMap = await getDrawingsForGame(game.hash);
       const userSubmittedMap = JSON.parse(await getFromCache(`game:${hash}:user-submitted-map`));
+      const userReadyMap = JSON.parse(await getFromCache(`game:${hash}:user-ready-map`));
       res.status(200).send({
         success: true,
         game,
         drawingMap,
         userSubmittedMap,
+        userReadyMap,
       });
     } else {
       res.status(400).send({ success: false });
