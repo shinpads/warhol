@@ -261,6 +261,9 @@ async function submitStep(socket, hash, userId, io, step) {
       if (game.round >= game.rounds) {
         game.state = 'COMPLETE';
         game.endTime = Date.now();
+        const nextGame = new db.Game.model();
+        await nextGame.save();
+        game.nextGame = nextGame._id;
         try {
           const drawingMap = await getDrawingsForGame(game.hash);
           io.to(hash).emit('drawing-map', drawingMap);
@@ -271,6 +274,7 @@ async function submitStep(socket, hash, userId, io, step) {
           round: game.round,
           state: game.state,
           gameChains: game.gameChains,
+          nextGame,
         });
       } else {
         game.round += 1;

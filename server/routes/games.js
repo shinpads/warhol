@@ -29,7 +29,8 @@ async function getGame(req, res) {
           path: 'gameSteps',
           populate: { path: 'user' },
         },
-      });
+      })
+      .populate('nextGame');
     if (game) {
       const drawingMap = await getDrawingsForGame(game.hash);
       const userSubmittedMap = JSON.parse(await getFromCache(`game:${hash}:user-submitted-map`));
