@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
+const compression = require('compression');
 
 const log = debug('warhol:index');
 // const logError = debug('warhol:index:error');
@@ -33,6 +34,7 @@ if (process.env.MONGO_USER && process.env.MONGO_PASSWORD) {
 
 const app = express();
 
+app.use(compression());
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
