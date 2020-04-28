@@ -142,6 +142,10 @@ const words = [
   'kangaroo',
   'face mask',
   'quarantine',
+  'bat',
+  'brain',
+  'rat',
+  'batman',
 ];
 
 module.exports = {
