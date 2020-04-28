@@ -13,10 +13,8 @@ function generateWords(amount) {
 const words = [
   'insect',
   'queen',
-  'sister',
   'piano',
   'classroom',
-  'girlfriend',
   'airport',
   'apartment',
   'medicine',
@@ -54,7 +52,7 @@ const words = [
   'stranger',
   'winner',
   'director',
-  'billionare',
+  'billionaire',
   'surgery',
   'chemistry',
   'king',
@@ -111,8 +109,13 @@ const words = [
   'Halloween',
   'first class',
   'bass',
-  'text',
+  'text message',
   'dirty',
+  'Obama',
+  'Fortnite',
+  'mirror',
+  'alarm',
+  'thunder',
 ];
 
 module.exports = {
