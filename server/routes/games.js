@@ -72,7 +72,7 @@ async function getGames(req, res) {
     if (!skip) skip = 0;
     if (!limit) limit = 8;
     const games = await db.Game.model.find(
-      { state: 'COMPLETE', rounds: { $gte: 2 } },
+      { state: 'COMPLETE', rounds: { $gte: 3 } },
       {},
     )
       .sort({ createdAt: -1, endTime: -1 })
