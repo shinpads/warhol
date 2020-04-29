@@ -146,6 +146,12 @@ const words = [
   'brain',
   'rat',
   'batman',
+  'mowing the lawn',
+  'dirt cheap',
+  'McDonald\'s',
+  'big nose',
+  'teeth gap',
+  'lottery',
 ];
 
 module.exports = {
