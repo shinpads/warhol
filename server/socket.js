@@ -138,7 +138,7 @@ async function startGame(hash, io) {
     log('start-game', hash);
     const game = await db.Game.model.findOne({ hash }).populate('users');
     if (game.state !== 'PRE_START') return;
-
+    game.players = game.users.map(u => u._id);
     game.state = 'IN_PROGRESS';
     game.round = 1;
     game.rounds = game.users.length;

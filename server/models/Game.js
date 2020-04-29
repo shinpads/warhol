@@ -20,7 +20,8 @@ const schema = {
       },
     },
   },
-  users: { type: [{ type: ObjectId, ref: 'User' }], default: [] },
+  users: { type: [{ type: ObjectId, ref: 'User' }], default: [] }, // current people in the game
+  players: { type: [{ type: ObjectId, ref: 'User' }] }, // all people that were in game
   host: { type: ObjectId, ref: 'User' },
   state: { type: String, enum: ['PRE_START', 'WORD_CHOICE', 'IN_PROGRESS', 'COMPLETE'], default: 'PRE_START' },
   round: { type: Number, default: 0 },
