@@ -42,6 +42,15 @@ async function getGame(req, res) {
         userSubmittedMap,
         userReadyMap,
       });
+      try {
+        const userId = req.user._id;
+        await db.Game.model.findOneAndUpdate(
+          { hash },
+          { $addToSet: { viewers: userId } },
+        );
+      } catch (err) {
+        logError('Failed to add viewer to game', err);
+      }
     } else {
       res.status(400).send({ success: false });
     }
