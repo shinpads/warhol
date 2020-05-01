@@ -91,7 +91,10 @@ async function getGames(req, res) {
         path: 'gameChains',
         populate: {
           path: 'gameSteps',
-          populate: 'drawing',
+          populate: {
+            path: 'drawing',
+            model: 'Drawing',
+          },
         },
       });
     if (games) {
