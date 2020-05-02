@@ -255,6 +255,11 @@ async function submitStep(socket, hash, userId, io, step) {
       await drawing.save();
       gameStep.drawing = drawing._id;
     } else if (gameStep.type === 'GUESS') {
+      if (!step.guess || !step.guess.length) {
+        // eslint-disable-next-line
+        step.guess = generateWords(1)[0];
+        gameStep.guessAutoFilled = true;
+      }
       gameStep.guess = step.guess;
     }
     gameStep.submitted = true;

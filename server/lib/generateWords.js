@@ -68,7 +68,6 @@ const words = [
   'snowstorm',
   'proposal',
   'poem',
-  'Confucius',
   'injury',
   'singer',
   'jungle',

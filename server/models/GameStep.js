@@ -12,6 +12,7 @@ const schema = {
   type: { type: String, enum: ['DRAWING', 'GUESS'] },
   user: { type: ObjectId, ref: 'User' },
   guess: String,
+  guessAutoFilled: { type: Boolean, default: false },
   drawing: { type: ObjectId, ref: 'Drawing' },
   submitted: { type: Boolean, default: false },
 };
