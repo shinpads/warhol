@@ -35,40 +35,63 @@ function setupSocket(http) {
 
       await socket.join(hash);
 
-      const game = await db.Game.model.findOneAndUpdate(
-        { hash },
-        {
-          $addToSet: {
-            users: session.user._id,
+      const checkStateGame = await db.Game.model.findOne({ hash }).select('state').select('players');
+
+      if (!checkStateGame) throw new Error();
+      if (checkStateGame.state === 'COMPLETE') return;
+
+      if (checkStateGame.state === 'IN_PROGRESS' && (!checkStateGame.players || checkStateGame.players.indexOf(session.user._id) === -1)) {
+        const game = await db.Game.model.findOneAndUpdate(
+          { hash },
+          {
+            $addToSet: {
+              playersWaiting: session.user._id,
+            },
           },
-        },
-        { new: true },
-      )
-        .select('users')
-        .select('host')
-        .select('state')
-        .populate('users');
-      if (!game) throw new Error();
-      if (game.state === 'COMPLETE') return;
-
-      // get rid of any disconnected sockets if for some reasone the on disconnected didnt work
-      const oldLength = game.users.length;
-      game.users = game.users.filter(user => user.socketId
-        && io.sockets.sockets[user.socketId]
-        && io.sockets.sockets[user.socketId].connected);
-      if (oldLength !== game.users.length) {
-        await db.Game.model.findOneAndUpdate({ hash }, { users: game.users });
-      }
-
-      if (!game.host || game.users.findIndex(user => user._id === game.host) === -1) {
-        game.host = game.users[0]._id;
-        await db.Game.model.findOneAndUpdate({ hash }, { host: game.host })
-          .select('host')
+          { new: true },
+        )
+          .select('playersWaiting')
           .select('users')
-          .select('rounds');
-      }
+          .select('host')
+          .select('state')
+          .populate('users')
+          .populate('playersWaiting');
 
-      await io.in(hash).emit('update-game', game);
+        await io.in(hash).emit('update-game', game);
+      } else { // PRE_START
+        const game = await db.Game.model.findOneAndUpdate(
+          { hash },
+          {
+            $addToSet: {
+              users: session.user._id,
+            },
+          },
+          { new: true },
+        )
+          .select('users')
+          .select('host')
+          .select('state')
+          .select('playersWaiting')
+          .populate('users')
+          .populate('playersWaiting');
+        // get rid of any disconnected sockets if for some reasone the on disconnected didnt work
+        const oldLength = game.users.length;
+        game.users = game.users.filter(user => user.socketId
+          && io.sockets.sockets[user.socketId]
+          && io.sockets.sockets[user.socketId].connected);
+        if (oldLength !== game.users.length) {
+          await db.Game.model.findOneAndUpdate({ hash }, { users: game.users });
+        }
+
+        if (!game.host || game.users.findIndex(user => user._id === game.host) === -1) {
+          game.host = game.users[0]._id;
+          await db.Game.model.findOneAndUpdate({ hash }, { host: game.host })
+            .select('host')
+            .select('users')
+            .select('rounds');
+        }
+        await io.in(hash).emit('update-game', game);
+      }
 
       socket.on('disconnect', async () => {
         handleDisconnect(socket, hash, session.user._id, io);
@@ -304,6 +327,10 @@ async function submitStep(socket, hash, userId, io, step) {
 
       await setInCache(redisUserSubmittedMapKey, '{}');
       await io.to(hash).emit('user-submitted-map', {});
+
+      await io.to(hash).emit('update-game', {
+        round: game.round,
+      });
     }
   } catch (err) {
     logError(err);
