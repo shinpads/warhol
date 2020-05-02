@@ -312,7 +312,6 @@ async function submitStep(socket, hash, userId, io, step) {
             .map(gs => String(gs.user._id))
             .indexOf(String(user._id)) + game.round - 1) % game.gameChains.length;
 
-          log('adding to', user, game.gameChains[userChainIndex], game.gameChains[userChainIndex].gameSteps.map(gs => gs.user._id));
           const newGameStep = new db.GameStep.model();
           newGameStep.type = type;
           newGameStep.user = user;

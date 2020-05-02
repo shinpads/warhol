@@ -20,7 +20,6 @@ const bucket = gc.bucket(BUCKET_NAME);
  * @return {Promise}
  */
 async function uploadDrawing(drawData, fileName) {
-  log('uploading drawing', fileName);
   try {
     const cloudFile = bucket.file(fileName);
     const fileWriteStream = cloudFile.createWriteStream({ resumable: false });
@@ -43,11 +42,9 @@ async function uploadDrawing(drawData, fileName) {
  * @return {Promise} resolves to drawing object
  */
 async function downloadDrawing(fileName) {
-  log('getting drawing', fileName);
   try {
     const drawingFromCache = await getFromCache(fileName);
     if (drawingFromCache) {
-      log('got from cache', fileName);
       return JSON.parse(drawingFromCache);
     }
     const cloudFile = bucket.file(fileName);
@@ -58,7 +55,6 @@ async function downloadDrawing(fileName) {
     const drawing = await getObjectFromStream(fileReadStream)
       .catch(err => { throw new Error(err); });
     await setInCache(fileName, drawing);
-    log('got drawing from cloud store', fileName);
     return JSON.parse(drawing);
   } catch (err) {
     throw new Error('Failed to download file from cloud', err);

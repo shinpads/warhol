@@ -32,7 +32,7 @@ async function getUserFromSession(req, res) {
 // POST /api/users/:_id
 async function postUser(req, res) {
   const { _id } = req.params;
-  log(`POST /api/users/${_id}`);
+  log(`POST /api/users/${_id}`, req.body);
   try {
     if (String(_id) !== String(req.user._id)) return res.status(400).send({ success: false });
     const user = await db.User.model.findOneAndUpdate(
