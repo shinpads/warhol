@@ -239,9 +239,14 @@ async function sendReady(socket, hash, userId, io, ready) {
  */
 async function submitStep(socket, hash, userId, io, step) {
   try {
-    log(userId, 'submit-step');
-    const gameStep = await db.GameStep.model.findOne({ _id: step._id });
+    const gameStep = await db.GameStep.model.findOneAndUpdate(
+      { _id: step._id },
+      { submitted: true },
+      { new: false },
+    );
     if (String(gameStep.user) !== String(step.user._id)) return;
+    if (gameStep.submitted) return;
+    log(userId, 'submit-step', hash);
     if (gameStep.type === 'DRAWING') {
       const { drawData } = step;
       const drawing = new db.Drawing.model();
@@ -319,23 +324,17 @@ async function submitStep(socket, hash, userId, io, step) {
           await newGameStep.save();
           game.gameChains[userChainIndex].gameSteps.push(newGameStep);
           await game.gameChains[userChainIndex].save();
-          const gameChain = game.gameChains[userChainIndex];
-          gameChain.gameSteps = gameChain.gameSteps
-            .slice(gameChain.gameSteps.length - 2, gameChain.gameSteps.length);
-          io.to(user.socketId).emit('update-game', {
-            round: game.round,
-            gameChains: [gameChain],
-          });
         });
       }
       await game.save();
 
-      await setInCache(redisUserSubmittedMapKey, '{}');
-      await io.to(hash).emit('user-submitted-map', {});
-
       await io.to(hash).emit('update-game', {
         round: game.round,
+        gameChains: game.gameChains,
       });
+
+      await setInCache(redisUserSubmittedMapKey, '{}');
+      await io.to(hash).emit('user-submitted-map', {});
     }
   } catch (err) {
     logError(err);
