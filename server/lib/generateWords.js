@@ -456,6 +456,20 @@ const words = [
   'stretching',
   'cocktail',
   'bucket list',
+  'Social distancing',
+  'Apple cider',
+  'gold digger',
+  'pearl',
+  'road trip',
+  'winter boots',
+  'nurse',
+  'alarm ',
+  'freezer ',
+  'pretzel',
+  'shinpads',
+  'barbecue ',
+  'barbershop ',
+  'ground beef',
 ];
 
 module.exports = {
