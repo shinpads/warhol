@@ -280,7 +280,8 @@ async function submitStep(socket, hash, userId, io, step) {
           populate: { path: 'user' },
         },
       })
-      .populate('users');
+      .populate('users')
+      .populate('players');
 
     const allSubmitted = game.gameChains.map(gc => gc.gameSteps[gc.gameSteps.length - 1]
       && gc.gameSteps[gc.gameSteps.length - 1].submitted).indexOf(false) === -1;
@@ -307,7 +308,7 @@ async function submitStep(socket, hash, userId, io, step) {
       } else {
         game.round += 1;
         const type = game.round % 2 === 1 ? 'DRAWING' : 'GUESS';
-        await asyncForEach(game.users, async (user) => {
+        await asyncForEach(game.players, async (user) => {
           const userChainIndex = (game.gameChains
             .map(gs => String(gs.user._id))
             .indexOf(String(user._id)) + game.round - 1) % game.gameChains.length;
