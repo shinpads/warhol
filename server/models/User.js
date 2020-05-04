@@ -15,7 +15,16 @@ const schema = {
   socketId: String,
 };
 
-const compiledSchema = new mongoose.Schema(schema, { collection: 'users', autoIndex: true, strict: false });
+const compiledSchema = new mongoose.Schema(schema,
+  {
+    collection: 'users',
+    autoIndex: true,
+    strict: false,
+    timestamps: {
+      createdAt: 'createdAt',
+      updatedAt: 'updatedAt',
+    },
+  });
 const User = {
   model: mongoose.model('User', compiledSchema),
 };

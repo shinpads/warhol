@@ -100,9 +100,11 @@ function setupSocket(http) {
         startGame(socket, hash, session.user._id, io);
       });
       socket.on('submit-step', async (step) => {
+        log('submit-step', hash, session.user.username);
         submitStep(socket, hash, session.user._id, io, step);
       });
       socket.on('ready', async (ready) => {
+        log('ready', hash, session.user.username);
         sendReady(socket, hash, session.user._id, io, ready);
       });
     } catch (err) {
@@ -246,7 +248,6 @@ async function submitStep(socket, hash, userId, io, step) {
     );
     if (String(gameStep.user) !== String(step.user._id)) return;
     if (gameStep.submitted) return;
-    log(userId, 'submit-step', hash);
     if (gameStep.type === 'DRAWING') {
       const { drawData } = step;
       const drawing = new db.Drawing.model();
