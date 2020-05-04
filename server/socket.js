@@ -324,7 +324,14 @@ async function submitStep(socket, hash, userId, io, step) {
           newGameStep.user = user;
           await newGameStep.save();
           game.gameChains[userChainIndex].gameSteps.push(newGameStep);
-          await game.gameChains[userChainIndex].save();
+          await db.GameChain.model.findOneAndUpdate(
+            { _id: game.gameChains[userChainIndex]._id },
+            {
+              $push: {
+                gameSteps: newGameStep._id,
+              },
+            },
+          );
         });
       }
       await game.save();
