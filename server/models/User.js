@@ -13,6 +13,7 @@ const schema = {
   createdDate: Date,
   lastOnline: Date,
   socketId: String,
+  initalQuery: {},
 };
 
 const compiledSchema = new mongoose.Schema(schema,

@@ -5,6 +5,7 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const compression = require('compression');
+const queryString = require('query-string');
 
 const log = debug('warhol:index');
 // const logError = debug('warhol:index:error');
@@ -63,6 +64,10 @@ app.use('/', async (req, res, next) => {
     log(`Creating new user with session ${req.sessionId}`);
 
     const newUser = new db.User.model();
+    if (req.headers.referer) {
+      const query = getQueryFromUrl(req.headers.referer);
+      newUser.initalQuery = query;
+    }
     await newUser.save();
     req.user = newUser;
 
@@ -83,3 +88,11 @@ app.get('/', (req, res) => {
 
 
 httpServer.listen(3030, () => log('bpbe listening on port 3030'));
+
+function getQueryFromUrl(url) {
+  const index = url.indexOf('?');
+  if (index !== -1) {
+    return queryString.parse(url.slice(index, url.length));
+  }
+  return {};
+}
