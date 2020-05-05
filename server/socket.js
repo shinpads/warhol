@@ -29,7 +29,7 @@ function setupSocket(http) {
         throw new Error();
       }
 
-      log(session.user._id, 'connected');
+      log('connection', hash, session.user.username);
 
       await db.User.model.findOneAndUpdate({ _id: session.user._id }, { socketId });
 
@@ -52,13 +52,15 @@ function setupSocket(http) {
         )
           .select('playersWaiting')
           .select('users')
+          .select('players')
           .select('host')
           .select('state')
           .populate('users')
-          .populate('playersWaiting');
+          .populate('playersWaiting')
+          .populate('players');
 
         await io.in(hash).emit('update-game', game);
-      } else { // PRE_START
+      } else {
         const game = await db.Game.model.findOneAndUpdate(
           { hash },
           {
@@ -72,8 +74,10 @@ function setupSocket(http) {
           .select('host')
           .select('state')
           .select('playersWaiting')
+          .select('players')
           .populate('users')
-          .populate('playersWaiting');
+          .populate('playersWaiting')
+          .populate('players');
         // get rid of any disconnected sockets if for some reasone the on disconnected didnt work
         const oldLength = game.users.length;
         game.users = game.users.filter(user => user.socketId
@@ -94,6 +98,7 @@ function setupSocket(http) {
       }
 
       socket.on('disconnect', async () => {
+        log('disconnect', hash, session.user.username);
         handleDisconnect(socket, hash, session.user._id, io);
       });
       socket.on('start-game', async () => {
@@ -121,7 +126,6 @@ function setupSocket(http) {
  * @param {io} io socketio
  */
 async function handleDisconnect(socket, hash, userId, io) {
-  log(userId, 'disconnected');
   const game = await db.Game.model.findOneAndUpdate(
     { hash },
     {
@@ -191,6 +195,7 @@ async function startGame(hash, io) {
         rounds: game.rounds,
         round: game.round,
         gameChains: [gameChain],
+        players: game.users,
       });
     });
 
@@ -314,6 +319,7 @@ async function submitStep(socket, hash, userId, io, step) {
       } else {
         game.round += 1;
         const type = game.round % 2 === 1 ? 'DRAWING' : 'GUESS';
+        log('generating', type, 'round', game.round, game.hash);
         await asyncForEach(game.players, async (user) => {
           const userChainIndex = (game.gameChains
             .map(gs => String(gs.user._id))

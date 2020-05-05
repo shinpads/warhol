@@ -30,7 +30,7 @@ const schema = {
   rounds: Number,
   capacity: { type: Number, default: 12 }, // probably wont even need capacity so just in case
   gameChains: [{ type: ObjectId, ref: 'GameChain' }],
-  guessTimeLimit: { type: Number, default: 30 },
+  guessTimeLimit: { type: Number, default: 45 },
   drawTimeLimit: { type: Number, default: 90 },
   startTime: Date,
   endTime: Date,

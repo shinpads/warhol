@@ -2,7 +2,7 @@ function generateWords(amount) {
   const indexes = [];
   while (indexes.length < amount) {
     const n = Math.floor(Math.random() * words.length) + 1;
-    if (indexes.indexOf(n === -1)) {
+    if (indexes.indexOf(n) === -1) {
       indexes.push(n);
     }
   }
