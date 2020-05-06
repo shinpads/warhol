@@ -84,7 +84,7 @@ async function getGames(req, res) {
       { state: 'COMPLETE', rounds: { $gte: 3 } },
       {},
     )
-      .sort({ createdAt: -1, endTime: -1 })
+      .sort({ endTime: -1 })
       .limit(limit)
       .skip(skip)
       .populate({
