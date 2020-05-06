@@ -65,8 +65,9 @@ app.use('/', async (req, res, next) => {
 
     const newUser = new db.User.model();
     if (req.headers.referer) {
+      newUser.refererUrl = req.headers.referer;
       const query = getQueryFromUrl(req.headers.referer);
-      newUser.initalQuery = query;
+      newUser.refererQuery = query;
     }
     await newUser.save();
     req.user = newUser;

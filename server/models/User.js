@@ -13,7 +13,8 @@ const schema = {
   createdDate: Date,
   lastOnline: Date,
   socketId: String,
-  initalQuery: {},
+  refererQuery: {},
+  refererUrl: String,
 };
 
 const compiledSchema = new mongoose.Schema(schema,

@@ -101,16 +101,24 @@ function setupSocket(http) {
         log('disconnect', hash, session.user.username);
         handleDisconnect(socket, hash, session.user._id, io);
       });
+
       socket.on('start-game', async () => {
         startGame(socket, hash, session.user._id, io);
       });
+
       socket.on('submit-step', async (step) => {
         log('submit-step', hash, session.user.username);
         submitStep(socket, hash, session.user._id, io, step);
       });
+
       socket.on('ready', async (ready) => {
         log('ready', hash, session.user.username);
         sendReady(socket, hash, session.user._id, io, ready);
+      });
+
+      socket.on('update-users', async () => {
+        log('update-users', hash, session.user.username);
+        updateUsers(socket, hash, io);
       });
     } catch (err) {
       logError(err);
@@ -356,4 +364,27 @@ async function submitStep(socket, hash, userId, io, step) {
   }
 }
 
+/**
+ * updates all players / users to the players in current game
+ * @param {Socket} socket - the socket that emitted
+ * @param {string} hash - the hash of the game
+ * @param {io} io socketio
+ * @return {Game: {users, players}} populated game.users and game.players
+ */
+async function updateUsers(socket, hash, io) {
+  try {
+    const game = await db.Game.model.findOne({ hash })
+      .select('users')
+      .select('players')
+      .populate('users')
+      .populate('players');
+    if (game) {
+      io.to(hash).emit('update-game', game);
+    } else {
+      throw new Error('game not found', hash);
+    }
+  } catch (err) {
+    logError(err);
+  }
+}
 module.exports = setupSocket;
