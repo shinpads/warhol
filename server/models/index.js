@@ -4,6 +4,7 @@ const User = require('./User');
 const GameChain = require('./GameChain');
 const GameStep = require('./GameStep');
 const Drawing = require('./Drawing');
+const ContactMessage = require('./ContactMessage');
 
 module.exports = {
   Game,
@@ -12,4 +13,5 @@ module.exports = {
   GameChain,
   GameStep,
   Drawing,
+  ContactMessage,
 };

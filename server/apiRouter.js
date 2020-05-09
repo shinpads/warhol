@@ -7,6 +7,7 @@ const { downloadDrawing } = require('./drawingStore');
 
 const gamesRouter = require('./routes/games');
 const usersRouter = require('./routes/users');
+const contactMessagesRouter = require('./routes/contactMessages');
 
 const log = debug('warhol:apiRouter');
 const logError = debug('warhol:apiRouter:error');
@@ -15,6 +16,7 @@ const apiRouter = express.Router();
 
 apiRouter.use('/games', gamesRouter);
 apiRouter.use('/users', usersRouter);
+apiRouter.use('/contact-messages', contactMessagesRouter);
 
 apiRouter.get('/drawing/:_id', getDrawing);
 
