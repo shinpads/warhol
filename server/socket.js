@@ -14,6 +14,10 @@ const { ObjectId } = mongoose.mongo;
 const log = debug('warhol:socket');
 const logError = debug('warhol:socket:error');
 
+const SUBMIT_PADDING_TIME = 5000;
+
+const nextRoundTimeouts = {};
+
 function setupSocket(http) {
   const io = socketio(http);
   io.on('connection', async (socket) => {
@@ -210,6 +214,11 @@ async function startGame(hash, io) {
     game.gameChains = gameChains;
     game.startTime = Date.now();
     await game.save();
+
+    const timeoutTime = game.drawTimeLimit * 1000;
+    nextRoundTimeouts[hash] = setTimeout(() => {
+      startNextRound(io, hash);
+    }, timeoutTime + SUBMIT_PADDING_TIME);
   } catch (err) {
     logError(err);
     throw new Error(err);
@@ -274,11 +283,6 @@ async function submitStep(socket, hash, userId, io, step) {
       await drawing.save();
       gameStep.drawing = drawing._id;
     } else if (gameStep.type === 'GUESS') {
-      if (!step.guess || !step.guess.length) {
-        // eslint-disable-next-line
-        step.guess = generateWords(1)[0];
-        gameStep.guessAutoFilled = true;
-      }
       gameStep.guess = step.guess;
     }
     gameStep.submitted = true;
@@ -306,62 +310,114 @@ async function submitStep(socket, hash, userId, io, step) {
       && gc.gameSteps[gc.gameSteps.length - 1].submitted).indexOf(false) === -1;
 
     if (allSubmitted) {
-      if (game.round >= game.rounds) {
-        game.state = 'COMPLETE';
-        game.endTime = Date.now();
-        const nextGame = new db.Game.model();
-        await nextGame.save();
-        game.nextGame = nextGame._id;
-        try {
-          const drawingMap = await getDrawingsForGame(game.hash);
-          io.to(hash).emit('drawing-map', drawingMap);
-        } catch (err) {
-          logError('Coudlnt get drawingMap');
-        }
-        io.to(hash).emit('update-game', {
-          round: game.round,
-          state: game.state,
-          gameChains: game.gameChains,
-          nextGame,
-        });
-      } else {
-        game.round += 1;
-        const type = game.round % 2 === 1 ? 'DRAWING' : 'GUESS';
-        log('generating', type, 'round', game.round, game.hash);
-        await asyncForEach(game.players, async (user) => {
-          const userChainIndex = (game.gameChains
-            .map(gs => String(gs.user._id))
-            .indexOf(String(user._id)) + game.round - 1) % game.gameChains.length;
-
-          const newGameStep = new db.GameStep.model();
-          newGameStep.type = type;
-          newGameStep.user = user;
-          await newGameStep.save();
-          game.gameChains[userChainIndex].gameSteps.push(newGameStep);
-          await db.GameChain.model.findOneAndUpdate(
-            { _id: game.gameChains[userChainIndex]._id },
-            {
-              $push: {
-                gameSteps: newGameStep._id,
-              },
-            },
-          );
-        });
+      if (nextRoundTimeouts[hash]) {
+        clearTimeout(nextRoundTimeouts[hash]);
+        nextRoundTimeouts[hash] = null;
       }
-      await game.save();
-
-      await io.to(hash).emit('update-game', {
-        round: game.round,
-        gameChains: game.gameChains,
-      });
-
-      await setInCache(redisUserSubmittedMapKey, '{}');
-      await io.to(hash).emit('user-submitted-map', {});
+      await startNextRound(io, hash);
     }
   } catch (err) {
     logError(err);
     socket.emit('error', 'error submitting step');
   }
+}
+
+/**
+ * starts the next round / ends the game
+ * @param {io} io socketio
+ * @param {string} hash - the hash of the game
+ */
+async function startNextRound(io, hash) {
+  const game = await db.Game.model.findOne({ hash })
+    .populate({
+      path: 'gameChains',
+      populate: {
+        path: 'gameSteps',
+        populate: { path: 'user' },
+      },
+    })
+    .populate('users')
+    .populate('players');
+
+  // process any unsubmitted or empty steps
+  await asyncForEach(game.gameChains, async gc => {
+    const lastGameStep = gc.gameSteps[gc.gameSteps.length - 1];
+    if (lastGameStep.type === 'GUESS') {
+      if (!lastGameStep.guess || !lastGameStep.guess.length) {
+        // eslint-disable-next-line
+        lastGameStep.guess = generateWords(1)[0];
+        lastGameStep.autoFilled = true;
+      }
+      await lastGameStep.save();
+    } else if (lastGameStep.type === 'DRAWING') {
+      if (!lastGameStep.submitted) {
+        // TODO autofill drawing
+        lastGameStep.autoFilled = true;
+        await lastGameStep.save();
+      }
+    }
+  });
+
+  const redisUserSubmittedMapKey = `game:${hash}:user-submitted-map`;
+  if (game.round >= game.rounds) {
+    // END OF GAME
+    game.state = 'COMPLETE';
+    game.endTime = Date.now();
+    const nextGame = new db.Game.model();
+    await nextGame.save();
+    game.nextGame = nextGame._id;
+    try {
+      const drawingMap = await getDrawingsForGame(game.hash);
+      io.to(hash).emit('drawing-map', drawingMap);
+    } catch (err) {
+      logError('Coudlnt get drawingMap');
+    }
+    io.to(hash).emit('update-game', {
+      round: game.round,
+      state: game.state,
+      gameChains: game.gameChains,
+      nextGame,
+    });
+  } else {
+    // NEXT ROUND
+    game.round += 1;
+    const type = game.round % 2 === 1 ? 'DRAWING' : 'GUESS';
+    log('generating', type, 'round', game.round, game.hash);
+    await asyncForEach(game.players, async (user) => {
+      const userChainIndex = (game.gameChains
+        .map(gs => String(gs.user._id))
+        .indexOf(String(user._id)) + game.round - 1) % game.gameChains.length;
+
+      const newGameStep = new db.GameStep.model();
+      newGameStep.type = type;
+      newGameStep.user = user;
+      await newGameStep.save();
+      game.gameChains[userChainIndex].gameSteps.push(newGameStep);
+      await db.GameChain.model.findOneAndUpdate(
+        { _id: game.gameChains[userChainIndex]._id },
+        {
+          $push: {
+            gameSteps: newGameStep._id,
+          },
+        },
+      );
+    });
+
+    // create a timeout for the next round
+    const timeoutTime = (type === 'GUESS' ? game.guessTimeLimit : game.drawTimeLimit) * 1000;
+    nextRoundTimeouts[hash] = setTimeout(() => {
+      startNextRound(io, hash);
+    }, timeoutTime + SUBMIT_PADDING_TIME);
+  }
+  await game.save();
+
+  await io.to(hash).emit('update-game', {
+    round: game.round,
+    gameChains: game.gameChains,
+  });
+
+  await setInCache(redisUserSubmittedMapKey, '{}');
+  await io.to(hash).emit('user-submitted-map', {});
 }
 
 /**

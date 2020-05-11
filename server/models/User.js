@@ -15,6 +15,7 @@ const schema = {
   socketId: String,
   refererQuery: {},
   refererUrl: String,
+  isAdmin: Boolean,
 };
 
 const compiledSchema = new mongoose.Schema(schema,
