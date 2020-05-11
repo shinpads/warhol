@@ -1,6 +1,7 @@
 const socketio = require('socket.io');
 const debug = require('debug');
 const mongoose = require('mongoose');
+const moment = require('moment');
 
 const { asyncForEach } = require('../util/helperFunctions');
 const db = require('./models');
@@ -191,6 +192,7 @@ async function startGame(hash, io) {
       const gameStep = new db.GameStep.model();
       gameStep.type = 'DRAWING';
       gameStep.user = user._id;
+      gameStep.timeDue = moment().add(game.drawTimeLimit, 's');
       await gameStep.save();
       const gameChain = new db.GameChain.model();
       gameChain.originalWord = words[i];
@@ -382,6 +384,7 @@ async function startNextRound(io, hash) {
     // NEXT ROUND
     game.round += 1;
     const type = game.round % 2 === 1 ? 'DRAWING' : 'GUESS';
+    const timeLimit = type === 'DRAWING' ? game.drawTimeLimit : game.guessTimeLimit;
     log('generating', type, 'round', game.round, game.hash);
     await asyncForEach(game.players, async (user) => {
       const userChainIndex = (game.gameChains
@@ -391,6 +394,7 @@ async function startNextRound(io, hash) {
       const newGameStep = new db.GameStep.model();
       newGameStep.type = type;
       newGameStep.user = user;
+      newGameStep.timeDue = moment().add(timeLimit, 's');
       await newGameStep.save();
       game.gameChains[userChainIndex].gameSteps.push(newGameStep);
       await db.GameChain.model.findOneAndUpdate(

@@ -16,6 +16,7 @@ const schema = {
   autoFilled: { type: Boolean, default: false },
   drawing: { type: ObjectId, ref: 'Drawing' },
   submitted: { type: Boolean, default: false },
+  timeDue: Date,
 };
 
 const compiledSchema = new mongoose.Schema(schema, {
