@@ -353,7 +353,12 @@ async function startNextRound(io, hash) {
       await lastGameStep.save();
     } else if (lastGameStep.type === 'DRAWING') {
       if (!lastGameStep.submitted) {
-        // TODO autofill drawing
+        for (let i = gc.gameSteps.length - 2; i >= 0; i--) {
+          if (gc.gameSteps[i].type === 'DRAWING') {
+            lastGameStep.drawing = gc.gameSteps[i].drawing;
+            break;
+          }
+        }
         lastGameStep.autoFilled = true;
         await lastGameStep.save();
       }
