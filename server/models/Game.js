@@ -36,6 +36,7 @@ const schema = {
   endTime: Date,
   thumbnail: Object,
   nextGame: { type: ObjectId, ref: 'Game' },
+  isPublic: { type: Boolean, default: false },
 };
 
 const compiledSchema = new mongoose.Schema(schema, {
