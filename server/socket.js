@@ -371,6 +371,7 @@ async function startNextRound(io, hash) {
     game.state = 'COMPLETE';
     game.endTime = Date.now();
     const nextGame = new db.Game.model();
+    nextGame.isPublic = game.isPublic;
     await nextGame.save();
     game.nextGame = nextGame._id;
     try {

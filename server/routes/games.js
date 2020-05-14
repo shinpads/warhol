@@ -13,6 +13,7 @@ const logError = debug('warhol:games:error');
 const gameRouter = express.Router();
 
 
+gameRouter.get('/public', getPublicGame);
 gameRouter.get('/:hash', getGame);
 gameRouter.post('/', createGame);
 gameRouter.get('/', getGames);
@@ -54,6 +55,20 @@ async function getGame(req, res) {
     } else {
       res.status(400).send({ success: false });
     }
+  } catch (err) {
+    logError(err);
+    res.status(500).send({ success: false });
+  }
+}
+
+async function getPublicGame(req, res) {
+  try {
+    const publicGame = await db.Game.model.findOne({ isPublic: true, state: { $in: ['PRE_START', 'IN_PROGRESS'] } });
+    if (!publicGame) {
+      logError('no public game found');
+      return res.status(400).send({ success: false });
+    }
+    return res.send({ success: true, game: publicGame });
   } catch (err) {
     logError(err);
     res.status(500).send({ success: false });
