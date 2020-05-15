@@ -13,9 +13,11 @@ async function getDrawingsForGame(gameHash) {
     const drawingsMap = {};
     const promises = [];
     drawings.forEach(drawing => {
-      promises.push(downloadDrawing(drawing.cloudFileName).then(drawData => {
-        drawingsMap[drawing._id] = drawData;
-      }));
+      if (drawing.cloudFileName) {
+        promises.push(downloadDrawing(drawing.cloudFileName).then(drawData => {
+          drawingsMap[drawing._id] = drawData;
+        }));
+      }
     });
     await Promise.all(promises);
     return drawingsMap;
