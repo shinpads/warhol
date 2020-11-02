@@ -46,6 +46,10 @@ const httpServer = http.createServer(app);
 socket(httpServer);
 
 
+app.get('/', (req, res) => {
+  res.send({ ok: true });
+});
+
 app.use('/', async (req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -82,10 +86,6 @@ app.use('/', async (req, res, next) => {
 });
 
 app.use('/api', apiRouter);
-
-app.get('/', (req, res) => {
-  res.send({ ok: true });
-});
 
 
 httpServer.listen(3030, () => log('bpbe listening on port 3030'));
