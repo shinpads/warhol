@@ -10,7 +10,7 @@ function generateHash() {
 
 async function asyncForEach(arr, func) {
   for (let i = 0; i < arr.length; i++) {
-    await func(arr[i]);
+    await func(arr[i], i);
   }
 }
 

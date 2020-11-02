@@ -9,7 +9,7 @@ const schema = {
     auto: true,
   },
 
-  type: { type: String, enum: ['DRAWING', 'GUESS'] },
+  type: { type: String, enum: ['DRAWING', 'GUESS', 'WORD'] },
   user: { type: ObjectId, ref: 'User' },
   guess: String,
   guessAutoFilled: { type: Boolean, default: false },

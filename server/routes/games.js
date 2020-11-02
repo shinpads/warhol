@@ -114,8 +114,8 @@ async function getGames(req, res) {
       });
     if (games) {
       await asyncForEach(games, async (game) => {
-        const firstDrawingFileName = game.gameChains[0].gameSteps[0].drawing.cloudFileName;
         try {
+          const firstDrawingFileName = game.gameChains[0].gameSteps[0].drawing.cloudFileName;
           const drawData = await downloadDrawing(firstDrawingFileName);
           // eslint-disable-next-line no-param-reassign
           game.thumbnail = drawData;

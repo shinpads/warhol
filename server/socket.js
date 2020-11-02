@@ -125,6 +125,11 @@ function setupSocket(http) {
         log('update-users', hash, session.user.username);
         updateUsers(socket, hash, io);
       });
+
+      socket.on('update-config', async (update) => {
+        log('update-config', hash, session.user.username);
+        updateConfig(socket, hash, session.user._id, update, io);
+      });
     } catch (err) {
       logError(err);
       socket.close();
@@ -185,18 +190,22 @@ async function startGame(hash, io) {
     game.round = 1;
     game.rounds = game.users.length;
     const words = generateWords(game.users.length);
-    let i = 0;
     // create gamechains
     const gameChains = [];
-    await asyncForEach(game.users, async (user) => {
+    await asyncForEach(game.users, async (user, i) => {
       const gameStep = new db.GameStep.model();
-      gameStep.type = 'DRAWING';
+      if (game.config.chooseFirstWord) {
+        gameStep.type = 'WORD';
+      } else {
+        gameStep.type = 'DRAWING';
+      }
       gameStep.user = user._id;
-      gameStep.timeDue = moment().add(game.drawTimeLimit, 's');
+      gameStep.timeDue = moment().add(game.config.drawTimeLimit, 's');
       await gameStep.save();
       const gameChain = new db.GameChain.model();
-      gameChain.originalWord = words[i];
-      i += 1;
+      if (!game.config.chooseFirstWord) {
+        gameChain.originalWord = words[i];
+      }
       gameChain.user = user._id;
       gameChain.game = game._id;
       gameChain.gameSteps = [gameStep._id];
@@ -217,7 +226,7 @@ async function startGame(hash, io) {
     game.startTime = Date.now();
     await game.save();
 
-    const timeoutTime = game.drawTimeLimit * 1000;
+    const timeoutTime = game.config.drawTimeLimit * 1000;
     nextRoundTimeouts[hash] = setTimeout(() => {
       startNextRound(io, hash);
     }, timeoutTime + SUBMIT_PADDING_TIME);
@@ -286,6 +295,8 @@ async function submitStep(socket, hash, userId, io, step) {
       gameStep.drawing = drawing._id;
     } else if (gameStep.type === 'GUESS') {
       gameStep.guess = step.guess;
+    } else if (gameStep.type === 'WORD') {
+      gameStep.guess = step.guess;
     }
     gameStep.submitted = true;
     await gameStep.save();
@@ -344,7 +355,7 @@ async function startNextRound(io, hash) {
   // process any unsubmitted or empty steps
   await asyncForEach(game.gameChains, async gc => {
     const lastGameStep = gc.gameSteps[gc.gameSteps.length - 1];
-    if (lastGameStep.type === 'GUESS') {
+    if (lastGameStep.type === 'GUESS' || lastGameStep.type === 'WORD') {
       if (!lastGameStep.guess || !lastGameStep.guess.length) {
         // eslint-disable-next-line
         lastGameStep.guess = generateWords(1)[0];
@@ -372,6 +383,7 @@ async function startNextRound(io, hash) {
     game.endTime = Date.now();
     const nextGame = new db.Game.model();
     nextGame.isPublic = game.isPublic;
+    nextGame.config = game.config;
     await nextGame.save();
     game.nextGame = nextGame._id;
     try {
@@ -389,8 +401,8 @@ async function startNextRound(io, hash) {
   } else {
     // NEXT ROUND
     game.round += 1;
-    const type = game.round % 2 === 1 ? 'DRAWING' : 'GUESS';
-    const timeLimit = type === 'DRAWING' ? game.drawTimeLimit : game.guessTimeLimit;
+    const type = (game.round - game.config.chooseFirstWord) % 2 === 1 ? 'DRAWING' : 'GUESS';
+    const timeLimit = type === 'DRAWING' ? game.config.drawTimeLimit : game.config.guessTimeLimit;
     log('generating', type, 'round', game.round, game.hash);
     await asyncForEach(game.players, async (user) => {
       const userChainIndex = (game.gameChains
@@ -414,7 +426,7 @@ async function startNextRound(io, hash) {
     });
 
     // create a timeout for the next round
-    const timeoutTime = (type === 'GUESS' ? game.guessTimeLimit : game.drawTimeLimit) * 1000;
+    const timeoutTime = (type === 'GUESS' ? game.config.guessTimeLimit : game.config.drawTimeLimit) * 1000;
     nextRoundTimeouts[hash] = setTimeout(() => {
       startNextRound(io, hash);
     }, timeoutTime + SUBMIT_PADDING_TIME);
@@ -449,6 +461,25 @@ async function updateUsers(socket, hash, io) {
     } else {
       throw new Error('game not found', hash);
     }
+  } catch (err) {
+    logError(err);
+  }
+}
+
+async function updateConfig(socket, hash, userId, update, io) {
+  try {
+    const game = await db.Game.model.findOne({ hash });
+
+    if (String(userId) !== String(game.host)) {
+      throw new Error('not host');
+    }
+    log('update', update);
+    game.config[update.key] = update.value;
+
+    await game.save();
+    io.to(hash).emit('update-game', {
+      config: game.config,
+    });
   } catch (err) {
     logError(err);
   }
