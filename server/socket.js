@@ -228,7 +228,7 @@ async function startGame(hash, io) {
 
     const timeoutTime = game.config.drawTimeLimit * 1000;
     nextRoundTimeouts[hash] = setTimeout(() => {
-      startNextRound(io, hash);
+      startRound(io, hash, game.round + 1);
     }, timeoutTime + SUBMIT_PADDING_TIME);
   } catch (err) {
     logError(err);
@@ -335,6 +335,25 @@ async function submitStep(socket, hash, userId, io, step) {
   }
 }
 
+async function startRound(io, hash, roundNumber) {
+  const game = await db.Game.model.findOne({ hash })
+    .populate({
+      path: 'gameChains',
+      populate: {
+        path: 'gameSteps',
+        populate: { path: 'user' },
+      },
+    });
+  const allSubmitted = game.gameChains.map(gc => gc.gameSteps[roundNumber - 2]
+    && gc.gameSteps[roundNumber - 2].submitted).indexOf(false) === -1;
+
+  if (!allSubmitted) {
+    startNextRound(io, hash);
+  } else {
+    log('Tried to start next round when it had already started!');
+  }
+}
+
 /**
  * starts the next round / ends the game
  * @param {io} io socketio
@@ -428,7 +447,7 @@ async function startNextRound(io, hash) {
     // create a timeout for the next round
     const timeoutTime = (type === 'GUESS' ? game.config.guessTimeLimit : game.config.drawTimeLimit) * 1000;
     nextRoundTimeouts[hash] = setTimeout(() => {
-      startNextRound(io, hash);
+      startRound(io, hash, game.round + 1);
     }, timeoutTime + SUBMIT_PADDING_TIME);
   }
   await game.save();
