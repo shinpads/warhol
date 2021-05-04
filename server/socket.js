@@ -227,9 +227,9 @@ async function startGame(hash, io) {
     await game.save();
 
     const timeoutTime = game.config.drawTimeLimit * 1000;
-    nextRoundTimeouts[hash] = setTimeout(() => {
-      startRound(io, hash, game.round + 1);
-    }, timeoutTime + SUBMIT_PADDING_TIME);
+    // nextRoundTimeouts[hash] = setTimeout(() => {
+    //   startRound(io, hash, game.round + 1);
+    // }, timeoutTime + SUBMIT_PADDING_TIME);
   } catch (err) {
     logError(err);
     throw new Error(err);
@@ -323,10 +323,10 @@ async function submitStep(socket, hash, userId, io, step) {
       && gc.gameSteps[gc.gameSteps.length - 1].submitted).indexOf(false) === -1;
 
     if (allSubmitted) {
-      if (nextRoundTimeouts[hash]) {
-        clearTimeout(nextRoundTimeouts[hash]);
-        nextRoundTimeouts[hash] = null;
-      }
+      // if (nextRoundTimeouts[hash]) {
+      //   clearTimeout(nextRoundTimeouts[hash]);
+      //   nextRoundTimeouts[hash] = null;
+      // }
       await startNextRound(io, hash);
     }
   } catch (err) {
@@ -446,9 +446,9 @@ async function startNextRound(io, hash) {
 
     // create a timeout for the next round
     const timeoutTime = (type === 'GUESS' ? game.config.guessTimeLimit : game.config.drawTimeLimit) * 1000;
-    nextRoundTimeouts[hash] = setTimeout(() => {
-      startRound(io, hash, game.round + 1);
-    }, timeoutTime + SUBMIT_PADDING_TIME);
+    // nextRoundTimeouts[hash] = setTimeout(() => {
+    //   startRound(io, hash, game.round + 1);
+    // }, timeoutTime + SUBMIT_PADDING_TIME);
   }
   await game.save();
 
